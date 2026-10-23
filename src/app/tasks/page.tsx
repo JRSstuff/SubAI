@@ -4,6 +4,7 @@ import React, { useEffect, useState, useTransition, useRef } from "react";
 import {
   Wrench,
   Camera,
+  FolderOpen,
   Scale,
   Recycle,
   CheckCircle2,
@@ -48,8 +49,10 @@ export default function TasksPage() {
     message: string;
   } | null>(null);
 
-  const beforeInputRef = useRef<HTMLInputElement>(null);
-  const afterInputRef = useRef<HTMLInputElement>(null);
+  const beforeCameraInputRef = useRef<HTMLInputElement>(null);
+  const beforeFileInputRef = useRef<HTMLInputElement>(null);
+  const afterCameraInputRef = useRef<HTMLInputElement>(null);
+  const afterFileInputRef = useRef<HTMLInputElement>(null);
 
   const loadTasks = async () => {
     setIsLoading(true);
@@ -94,6 +97,10 @@ export default function TasksPage() {
     setBeforePhoto(null);
     setAfterPhoto(null);
     setAcceptedKg(0);
+    if (beforeCameraInputRef.current) beforeCameraInputRef.current.value = "";
+    if (beforeFileInputRef.current) beforeFileInputRef.current.value = "";
+    if (afterCameraInputRef.current) afterCameraInputRef.current.value = "";
+    if (afterFileInputRef.current) afterFileInputRef.current.value = "";
   };
 
   const handlePhotoUpload = async (
@@ -292,40 +299,105 @@ export default function TasksPage() {
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     {/* Before Photo Box */}
-                    <div
-                      onClick={() => beforeInputRef.current?.click()}
-                      className="aspect-video rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] flex flex-col items-center justify-center p-2 text-center cursor-pointer hover:border-[#30AFFF] transition-all overflow-hidden"
-                    >
+                    <div className="rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] flex flex-col items-center justify-center p-2.5 text-center transition-all overflow-hidden min-h-[140px]">
                       {beforePhoto ? (
-                        <img src={beforePhoto} alt="Before" className="w-full h-full object-cover rounded-xl" />
+                        <div className="relative w-full aspect-video rounded-xl overflow-hidden">
+                          <img src={beforePhoto} alt="Before" className="w-full h-full object-cover" />
+                          <div className="absolute top-1.5 right-1.5 flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => beforeCameraInputRef.current?.click()}
+                              className="px-2 py-1 bg-white/95 rounded-lg text-[10px] font-bold shadow-xs active:scale-95 cursor-pointer"
+                            >
+                              Camera
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => beforeFileInputRef.current?.click()}
+                              className="px-2 py-1 bg-white/95 rounded-lg text-[10px] font-bold shadow-xs active:scale-95 cursor-pointer"
+                            >
+                              Files
+                            </button>
+                          </div>
+                        </div>
                       ) : (
-                        <div className="flex flex-col items-center gap-1">
-                          <Upload className="w-5 h-5 text-[#64748B]" />
+                        <div className="flex flex-col items-center gap-1.5 w-full py-1">
+                          <Upload className="w-4 h-4 text-[#64748B]" />
                           <span className="text-xs font-bold text-[#0F172A]">Before Photo</span>
-                          <span className="text-[10px] text-[#64748B]">Clogged drain</span>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <button
+                              type="button"
+                              onClick={() => beforeCameraInputRef.current?.click()}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-[#30AFFF] text-white rounded-lg text-[11px] font-bold shadow-xs active:scale-95 cursor-pointer"
+                            >
+                              <Camera className="w-3 h-3" />
+                              <span>Camera</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => beforeFileInputRef.current?.click()}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-white text-[#0F172A] border border-[#CBD5E1] rounded-lg text-[11px] font-bold shadow-xs active:scale-95 cursor-pointer"
+                            >
+                              <FolderOpen className="w-3 h-3 text-[#475569]" />
+                              <span>Files</span>
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
 
                     {/* After Photo Box */}
-                    <div
-                      onClick={() => afterInputRef.current?.click()}
-                      className="aspect-video rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] flex flex-col items-center justify-center p-2 text-center cursor-pointer hover:border-[#10B981] transition-all overflow-hidden"
-                    >
+                    <div className="rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] flex flex-col items-center justify-center p-2.5 text-center transition-all overflow-hidden min-h-[140px]">
                       {afterPhoto ? (
-                        <img src={afterPhoto} alt="After" className="w-full h-full object-cover rounded-xl" />
+                        <div className="relative w-full aspect-video rounded-xl overflow-hidden">
+                          <img src={afterPhoto} alt="After" className="w-full h-full object-cover" />
+                          <div className="absolute top-1.5 right-1.5 flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => afterCameraInputRef.current?.click()}
+                              className="px-2 py-1 bg-white/95 rounded-lg text-[10px] font-bold shadow-xs active:scale-95 cursor-pointer"
+                            >
+                              Camera
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => afterFileInputRef.current?.click()}
+                              className="px-2 py-1 bg-white/95 rounded-lg text-[10px] font-bold shadow-xs active:scale-95 cursor-pointer"
+                            >
+                              Files
+                            </button>
+                          </div>
+                        </div>
                       ) : (
-                        <div className="flex flex-col items-center gap-1">
-                          <CheckCircle2 className="w-5 h-5 text-[#10B981]" />
+                        <div className="flex flex-col items-center gap-1.5 w-full py-1">
+                          <CheckCircle2 className="w-4 h-4 text-[#10B981]" />
                           <span className="text-xs font-bold text-[#0F172A]">After Photo</span>
-                          <span className="text-[10px] text-[#64748B]">Cleared drain</span>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <button
+                              type="button"
+                              onClick={() => afterCameraInputRef.current?.click()}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-[#10B981] text-white rounded-lg text-[11px] font-bold shadow-xs active:scale-95 cursor-pointer"
+                            >
+                              <Camera className="w-3 h-3" />
+                              <span>Camera</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => afterFileInputRef.current?.click()}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-white text-[#0F172A] border border-[#CBD5E1] rounded-lg text-[11px] font-bold shadow-xs active:scale-95 cursor-pointer"
+                            >
+                              <FolderOpen className="w-3 h-3 text-[#475569]" />
+                              <span>Files</span>
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
                   </div>
 
+                  {/* Before Inputs */}
                   <input
-                    ref={beforeInputRef}
+                    ref={beforeCameraInputRef}
                     type="file"
                     accept="image/*"
                     capture="environment"
@@ -333,10 +405,26 @@ export default function TasksPage() {
                     className="hidden"
                   />
                   <input
-                    ref={afterInputRef}
+                    ref={beforeFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handlePhotoUpload(e, "before")}
+                    className="hidden"
+                  />
+
+                  {/* After Inputs */}
+                  <input
+                    ref={afterCameraInputRef}
                     type="file"
                     accept="image/*"
                     capture="environment"
+                    onChange={(e) => handlePhotoUpload(e, "after")}
+                    className="hidden"
+                  />
+                  <input
+                    ref={afterFileInputRef}
+                    type="file"
+                    accept="image/*"
                     onChange={(e) => handlePhotoUpload(e, "after")}
                     className="hidden"
                   />

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Camera,
+  FolderOpen,
   UploadCloud,
   MapPin,
   Sparkles,
@@ -53,6 +54,7 @@ export default function ReportPage() {
   } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Handle Photo Capture / Selection
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,9 +84,8 @@ export default function ReportPage() {
   const handleRetake = () => {
     setPhotoBase64(null);
     setAiResult(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -156,20 +157,37 @@ export default function ReportPage() {
             </div>
 
             {!photoBase64 ? (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full h-56 sm:h-64 border-2 border-dashed border-[#CBD5E1] hover:border-[#30AFFF] rounded-2xl flex flex-col items-center justify-center gap-3 bg-[#F8FAFC] hover:bg-[#F1F5F9] cursor-pointer transition-all"
-              >
+              <div className="w-full p-6 sm:p-8 border-2 border-dashed border-[#CBD5E1] hover:border-[#30AFFF] rounded-2xl flex flex-col items-center justify-center gap-4 bg-[#F8FAFC] transition-all">
                 <div className="w-14 h-14 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex items-center justify-center text-[#30AFFF]">
                   <Camera className="w-7 h-7" />
                 </div>
                 <div className="flex flex-col items-center text-center px-4">
                   <span className="text-sm font-bold text-[#0F172A]">
-                    Take Photo / Upload
+                    Add Drainage Photo
                   </span>
                   <span className="text-xs text-[#64748B] mt-0.5">
-                    Hardware back-camera priority &bull; Automatic optimization
+                    Capture photo with camera or choose from device files
                   </span>
+                </div>
+
+                {/* Dual Options: Camera vs Files */}
+                <div className="flex items-center gap-3 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-[#30AFFF] hover:bg-[#1f9eef] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer min-h-[44px]"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <span>Camera</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#F1F5F9] text-[#0F172A] border border-[#CBD5E1] rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer min-h-[44px]"
+                  >
+                    <FolderOpen className="w-4 h-4 text-[#475569]" />
+                    <span>Files</span>
+                  </button>
                 </div>
               </div>
             ) : (
@@ -180,14 +198,24 @@ export default function ReportPage() {
                     alt="Captured drainage obstruction"
                     className="w-full h-full object-cover"
                   />
-                  <button
-                    type="button"
-                    onClick={handleRetake}
-                    className="absolute top-3 right-3 px-3 py-1.5 bg-white/90 hover:bg-white text-[#0F172A] rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 backdrop-blur-xs transition-all cursor-pointer"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Retake</span>
-                  </button>
+                  <div className="absolute top-3 right-3 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="px-3 py-1.5 bg-white/95 hover:bg-white text-[#0F172A] rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 backdrop-blur-xs transition-all cursor-pointer"
+                    >
+                      <Camera className="w-3.5 h-3.5 text-[#30AFFF]" />
+                      <span>Camera</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-3 py-1.5 bg-white/95 hover:bg-white text-[#0F172A] rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 backdrop-blur-xs transition-all cursor-pointer"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-[#475569]" />
+                      <span>Files</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Gemini AI Scan Status Box */}
@@ -235,11 +263,20 @@ export default function ReportPage() {
               </div>
             )}
 
+            {/* Direct Hardware Camera Viewfinder (with capture="environment") */}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhotoSelect}
+              className="hidden"
+            />
+            {/* Storage / Photo Library / File Picker (NO capture attribute) */}
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={handlePhotoSelect}
               className="hidden"
             />
