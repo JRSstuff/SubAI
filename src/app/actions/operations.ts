@@ -61,24 +61,37 @@ export async function submitReportAction(formData: FormData): Promise<ActionResu
     const timestampRef = Math.floor(1000 + Math.random() * 9000);
     const referenceNo = `TL-${new Date().getFullYear()}-${timestampRef}`;
 
-    // Insert into reports
-    const { data: newReport, error: reportErr } = await supabase
+    // Base report payload
+    const reportPayload: Record<string, unknown> = {
+      reference_no: referenceNo,
+      site_id: site?.id || null,
+      reporter_name: reporterName,
+      location_name: locationName,
+      latitude: latitude,
+      longitude: longitude,
+      description: description,
+      photo_url: photoBase64,
+      review_state: "Submitted",
+      dataset_origin: "pilot",
+    };
+
+    // Insert into reports (attempt with reporter_id if logged in, fallback gracefully if stale foreign key constraint exists)
+    let { data: newReport, error: reportErr } = await supabase
       .from("reports")
-      .insert({
-        reference_no: referenceNo,
-        site_id: site?.id || null,
-        reporter_id: userId,
-        reporter_name: reporterName,
-        location_name: locationName,
-        latitude: latitude,
-        longitude: longitude,
-        description: description,
-        photo_url: photoBase64,
-        review_state: "Submitted",
-        dataset_origin: "pilot",
-      })
+      .insert(userId ? { ...reportPayload, reporter_id: userId } : reportPayload)
       .select()
       .single();
+
+    // Auto-fallback: If reporter_id foreign key constraint is violated (e.g. references auth.users), retry with reporter_id = null
+    if (reportErr && (reportErr.message?.includes("reporter_id") || reportErr.code === "23503")) {
+      const retry = await supabase
+        .from("reports")
+        .insert(reportPayload)
+        .select()
+        .single();
+      newReport = retry.data;
+      reportErr = retry.error;
+    }
 
     if (reportErr || !newReport) {
       return {
