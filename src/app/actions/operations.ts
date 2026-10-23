@@ -42,6 +42,18 @@ export async function submitReportAction(formData: FormData): Promise<ActionResu
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
+    // Extract logged in user ID if present in session
+    let userId: string | null = null;
+    const sessionCookie = cookieStore.get("tubigloop_session")?.value;
+    if (sessionCookie) {
+      try {
+        const parsed = JSON.parse(sessionCookie);
+        userId = parsed.id || null;
+      } catch {
+        // ignore
+      }
+    }
+
     // Fetch site ID
     const { data: site } = await supabase.from("sites").select("id").limit(1).maybeSingle();
 
@@ -55,6 +67,7 @@ export async function submitReportAction(formData: FormData): Promise<ActionResu
       .insert({
         reference_no: referenceNo,
         site_id: site?.id || null,
+        reporter_id: userId,
         reporter_name: reporterName,
         location_name: locationName,
         latitude: latitude,

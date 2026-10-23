@@ -239,50 +239,21 @@ ALTER TABLE public.handovers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_analyses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_events ENABLE ROW LEVEL SECURITY;
 
--- App Users Policies
-DROP POLICY IF EXISTS "Allow select on app_users" ON public.app_users;
-CREATE POLICY "Allow select on app_users" ON public.app_users FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Allow insert on app_users" ON public.app_users;
-CREATE POLICY "Allow insert on app_users" ON public.app_users FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow update on app_users" ON public.app_users;
-CREATE POLICY "Allow update on app_users" ON public.app_users FOR UPDATE USING (true);
-
--- Sites Policies
-DROP POLICY IF EXISTS "Sites are readable by all" ON public.sites;
-CREATE POLICY "Sites are readable by all" ON public.sites FOR SELECT USING (true);
-
--- Reports Policies
-DROP POLICY IF EXISTS "Reports readable by all" ON public.reports;
-CREATE POLICY "Reports readable by all" ON public.reports FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Anyone can insert reports" ON public.reports;
-CREATE POLICY "Anyone can insert reports" ON public.reports FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Anyone can update reports" ON public.reports;
-CREATE POLICY "Anyone can update reports" ON public.reports FOR UPDATE USING (true);
-
--- Tasks Policies
-DROP POLICY IF EXISTS "Tasks readable by all" ON public.cleanup_tasks;
-CREATE POLICY "Tasks readable by all" ON public.cleanup_tasks FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Anyone can manage tasks" ON public.cleanup_tasks;
-CREATE POLICY "Anyone can manage tasks" ON public.cleanup_tasks FOR ALL USING (true);
-
--- Batches Policies
-DROP POLICY IF EXISTS "Batches readable by all" ON public.collection_batches;
-CREATE POLICY "Batches readable by all" ON public.collection_batches FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Anyone can insert batches" ON public.collection_batches;
-CREATE POLICY "Anyone can insert batches" ON public.collection_batches FOR INSERT WITH CHECK (true);
-
--- Handovers Policies
-DROP POLICY IF EXISTS "Handovers readable by all" ON public.handovers;
-CREATE POLICY "Handovers readable by all" ON public.handovers FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Anyone can log handovers" ON public.handovers;
-CREATE POLICY "Anyone can log handovers" ON public.handovers FOR ALL USING (true);
+-- Clean up any conflicting policies across tables
+DO $$ 
+DECLARE 
+    t TEXT;
+    pol RECORD;
+BEGIN 
+    FOR t IN SELECT unnest(ARRAY['reports', 'cleanup_tasks', 'collection_batches', 'handovers', 'ai_analyses', 'app_users', 'sites', 'audit_events']) 
+    LOOP 
+        FOR pol IN SELECT policyname FROM pg_policies WHERE tablename = t AND schemaname = 'public' 
+        LOOP 
+            EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, t); 
+        END LOOP; 
+        EXECUTE format('CREATE POLICY "Allow all on %I" ON public.%I FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true)', t, t);
+    END LOOP; 
+END $$;
 
 -- Storage Buckets
 INSERT INTO storage.buckets (id, name, public)

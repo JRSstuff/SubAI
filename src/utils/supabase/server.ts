@@ -6,6 +6,7 @@ const supabaseUrl =
   "https://cvfaethiloimouyxbanb.supabase.co";
 
 const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   "sb_publishable_CDDcZdQiIZS8pJPAp1J4yw_L9ABd4k7";
