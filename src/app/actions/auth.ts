@@ -1,10 +1,14 @@
 "use server";
 
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
+
 export interface AuthResponse {
   success: boolean;
   message: string;
   error?: string;
   user?: {
+    id?: string;
     username: string;
     email?: string;
     role?: string;
@@ -12,22 +16,19 @@ export interface AuthResponse {
 }
 
 /**
- * Server-side login verification.
+ * Server-side login verification connected to Supabase Auth.
  * Adheres strictly to Rule 1 (Server-Verified Truth):
  * Returns explicit 200 OK message on genuine server verification,
  * and exact error details on validation or credential failure.
  */
 export async function handleLoginAction(formData: FormData): Promise<AuthResponse> {
-  // Simulate minimal server-side roundtrip processing time (300ms)
-  await new Promise((resolve) => setTimeout(resolve, 350));
-
   const username = formData.get("username")?.toString().trim();
   const password = formData.get("password")?.toString();
 
   if (!username) {
     return {
       success: false,
-      message: "Server Error: Missing username",
+      message: "Server Error: Missing username/email",
       error: "Username or email is required by server specification.",
     };
   }
@@ -48,33 +49,63 @@ export async function handleLoginAction(formData: FormData): Promise<AuthRespons
     };
   }
 
-  // Authoritative server-side success confirmation
-  return {
-    success: true,
-    message: "Server 200 OK: User session verified and authenticated.",
-    user: {
-      username,
-      role: "Field Maintenance & Operations",
-    },
-  };
+  // Format email (if username doesn't contain '@', format as local campus pilot alias)
+  const email = username.includes("@") ? username : `${username.toLowerCase().replace(/\s+/g, "")}@tubigloop.local`;
+
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return {
+        success: false,
+        message: "Server 401 Unauthorized",
+        error: error.message,
+      };
+    }
+
+    const user = data.user;
+    const role = (user?.user_metadata?.role as string) || "reporter";
+    const displayName = (user?.user_metadata?.full_name as string) || username;
+
+    return {
+      success: true,
+      message: "Server 200 OK: User session authenticated and verified with Supabase.",
+      user: {
+        id: user?.id,
+        username: displayName,
+        email: user?.email,
+        role: role.toUpperCase(),
+      },
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      message: "Server Connection Failure",
+      error: err instanceof Error ? err.message : "Failed to establish secure session with Supabase server.",
+    };
+  }
 }
 
 /**
- * Server-side registration verification.
+ * Server-side registration verification connected to Supabase Auth.
  */
 export async function handleRegisterAction(formData: FormData): Promise<AuthResponse> {
-  await new Promise((resolve) => setTimeout(resolve, 350));
-
   const username = formData.get("username")?.toString().trim();
   const email = formData.get("email")?.toString().trim();
   const password = formData.get("password")?.toString();
-  const role = formData.get("role")?.toString().trim() || "Maintenance Personnel";
+  const role = formData.get("role")?.toString().trim().toLowerCase() || "reporter";
 
   if (!username || username.length < 3) {
     return {
       success: false,
-      message: "Server Error: Invalid username",
-      error: "Username must be at least 3 characters in length.",
+      message: "Server Error: Invalid name",
+      error: "Full name must be at least 3 characters in length.",
     };
   }
 
@@ -82,7 +113,7 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
     return {
       success: false,
       message: "Server Error: Invalid email format",
-      error: "Please enter a valid email address.",
+      error: "Please enter a valid official email address.",
     };
   }
 
@@ -90,17 +121,50 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
     return {
       success: false,
       message: "Server Error: Weak password",
-      error: "Password must be at least 6 characters with mixed characters.",
+      error: "Password must be at least 6 characters long.",
     };
   }
 
-  return {
-    success: true,
-    message: `Server 201 Created: Account successfully provisioned for ${username} (${role}).`,
-    user: {
-      username,
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    const { data, error } = await supabase.auth.signUp({
       email,
-      role,
-    },
-  };
+      password,
+      options: {
+        data: {
+          full_name: username,
+          role: role,
+        },
+      },
+    });
+
+    if (error) {
+      return {
+        success: false,
+        message: "Server Registration Error",
+        error: error.message,
+      };
+    }
+
+    const user = data.user;
+
+    return {
+      success: true,
+      message: `Server 201 Created: Account provisioned for ${username} (${role.toUpperCase()}).`,
+      user: {
+        id: user?.id,
+        username,
+        email,
+        role: role.toUpperCase(),
+      },
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      message: "Server Provisioning Failure",
+      error: err instanceof Error ? err.message : "Failed to register user on Supabase auth service.",
+    };
+  }
 }

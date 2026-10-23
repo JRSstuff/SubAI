@@ -14,8 +14,41 @@ import {
   ShieldCheck,
   Recycle,
   Wrench,
+  Megaphone,
+  ClipboardCheck,
 } from "lucide-react";
 import { handleLoginAction, handleRegisterAction, type AuthResponse } from "@/app/actions/auth";
+
+const ROLES = [
+  {
+    id: "reporter",
+    title: "Campus Reporter",
+    desc: "Spot & report drainage blocks",
+    icon: Megaphone,
+    activeColor: "bg-[#92EEFF] text-[#0F172A] border-[#30AFFF]",
+  },
+  {
+    id: "reviewer",
+    title: "Reviewer & Dispatch",
+    desc: "Triage priority & assign tasks",
+    icon: ClipboardCheck,
+    activeColor: "bg-[#30AFFF] text-white border-[#127dc7]",
+  },
+  {
+    id: "collector",
+    title: "Authorized Collector",
+    desc: "Weigh batches & photo evidence",
+    icon: Wrench,
+    activeColor: "bg-[#D8FFC5] text-[#0F2E1B] border-[#10B981]",
+  },
+  {
+    id: "recycler",
+    title: "Partner Recycler",
+    desc: "Confirm custody & accept kg",
+    icon: Recycle,
+    activeColor: "bg-[#C4F7CA] text-[#064E3B] border-[#059669]",
+  },
+];
 
 export function AuthCard() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -32,7 +65,7 @@ export function AuthCard() {
   const [registerUsername, setRegisterUsername] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
-  const [registerRole, setRegisterRole] = useState("Field Maintenance");
+  const [registerRole, setRegisterRole] = useState("reporter");
 
   // Clear server messages when switching tabs
   const toggleMode = (newMode: "login" | "register") => {
@@ -87,69 +120,68 @@ export function AuthCard() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto flex flex-col items-center justify-center p-3 sm:p-6 select-none">
+    <div className="w-full max-w-5xl mx-auto flex flex-col items-center justify-center p-2 sm:p-4 select-none">
       {/* ─────────────────────────────────────────────────────────────
           DESKTOP & TABLET VIEW: Sliding Dual-Panel Container (md:flex)
-          Matches the reference animation and curved overlay design
           ───────────────────────────────────────────────────────────── */}
-      <div className="hidden md:flex relative w-[880px] min-h-[580px] bg-white rounded-[36px] border border-[#E2E8F0] shadow-xl overflow-hidden">
+      <div className="hidden md:flex relative w-[920px] min-h-[640px] bg-white rounded-[36px] border border-[#E2E8F0] shadow-xl overflow-hidden">
         {/* UNDERLYING LEFT PANEL: Registration Form */}
-        <div className="w-1/2 p-10 flex flex-col justify-center bg-white z-0">
-          <div className="w-full max-w-[340px] mx-auto flex flex-col gap-5">
+        <div className="w-1/2 p-8 flex flex-col justify-center bg-white z-0 overflow-y-auto">
+          <div className="w-full max-w-[360px] mx-auto flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <h2 className="text-3xl font-bold tracking-tight text-[#0F172A]">Registration</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-[#0F172A]">Campus Registration</h2>
               <p className="text-xs text-[#64748B] font-medium">
-                Create your verified TubigLoop credentials
+                Choose your role in the TubigLoop campus pilot
               </p>
             </div>
 
-            {/* Role Selection Pills */}
+            {/* 4 Grand Plan Role Selector Cards */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-[#475569] uppercase tracking-wider">
-                Select Operational Role
+              <label className="text-[11px] font-bold text-[#475569] uppercase tracking-wider">
+                Authorized Role
               </label>
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRegisterRole("Field Maintenance")}
-                  className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                    registerRole === "Field Maintenance"
-                      ? "bg-[#92EEFF] text-[#0F172A] border-[#30AFFF]"
-                      : "bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0] hover:bg-[#F1F5F9]"
-                  }`}
-                >
-                  <Wrench className="w-3.5 h-3.5 text-[#30AFFF]" />
-                  <span>Maintenance</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRegisterRole("Partner Recycler")}
-                  className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                    registerRole === "Partner Recycler"
-                      ? "bg-[#D8FFC5] text-[#0F2E1B] border-[#10B981]"
-                      : "bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0] hover:bg-[#F1F5F9]"
-                  }`}
-                >
-                  <Recycle className="w-3.5 h-3.5 text-[#059669]" />
-                  <span>Recycler</span>
-                </button>
+                {ROLES.map((r) => {
+                  const Icon = r.icon;
+                  const isSelected = registerRole === r.id;
+                  return (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setRegisterRole(r.id)}
+                      className={`flex flex-col text-left p-2 rounded-xl text-xs border transition-all cursor-pointer ${
+                        isSelected
+                          ? r.activeColor
+                          : "bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0] hover:bg-[#F1F5F9]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                        <span className="font-bold truncate">{r.title}</span>
+                      </div>
+                      <span className="text-[10px] opacity-80 mt-0.5 line-clamp-1">
+                        {r.desc}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-3.5">
-              {/* Username Input Box */}
+            <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-3">
+              {/* Full Name Input Box */}
               <div className="relative flex items-center">
                 <input
                   type="text"
-                  placeholder="Full Name / Operator ID"
+                  placeholder="Full Name / Campus ID"
                   value={registerUsername}
                   onChange={(e) => setRegisterUsername(e.target.value)}
                   disabled={isPending}
-                  className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
+                  className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
                   required
                 />
                 <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
-                  <User className="w-5 h-5" />
+                  <User className="w-4 h-4" />
                 </div>
               </div>
 
@@ -157,15 +189,15 @@ export function AuthCard() {
               <div className="relative flex items-center">
                 <input
                   type="email"
-                  placeholder="Official Email Address"
+                  placeholder="Official Email (e.g. user@ustp.edu.ph)"
                   value={registerEmail}
                   onChange={(e) => setRegisterEmail(e.target.value)}
                   disabled={isPending}
-                  className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
+                  className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
                   required
                 />
                 <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
-                  <Mail className="w-5 h-5" />
+                  <Mail className="w-4 h-4" />
                 </div>
               </div>
 
@@ -173,19 +205,19 @@ export function AuthCard() {
               <div className="relative flex items-center">
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Secure Password (6+ characters)"
+                  placeholder="Password (minimum 6 characters)"
                   value={registerPassword}
                   onChange={(e) => setRegisterPassword(e.target.value)}
                   disabled={isPending}
-                  className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
+                  className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 text-[#64748B] hover:text-[#0F172A] transition-colors"
+                  className="absolute right-3.5 text-[#64748B] hover:text-[#0F172A] transition-colors cursor-pointer"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
 
@@ -216,15 +248,15 @@ export function AuthCard() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full h-12 mt-2 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full h-11 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isPending ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Contacting Server...</span>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Registering with Supabase...</span>
                   </>
                 ) : (
-                  <span>Register Account</span>
+                  <span>Create Campus Account</span>
                 )}
               </button>
             </form>
@@ -237,7 +269,7 @@ export function AuthCard() {
             <div className="flex flex-col gap-1">
               <h2 className="text-3xl font-bold tracking-tight text-[#0F172A]">Login</h2>
               <p className="text-xs text-[#64748B] font-medium">
-                Enter your credentials to access coordination terminal
+                Enter your credentials to access the CDO pilot terminal
               </p>
             </div>
 
@@ -246,7 +278,7 @@ export function AuthCard() {
               <div className="relative flex items-center">
                 <input
                   type="text"
-                  placeholder="Username / Email"
+                  placeholder="Email or Username"
                   value={loginUsername}
                   onChange={(e) => setLoginUsername(e.target.value)}
                   disabled={isPending}
@@ -272,7 +304,7 @@ export function AuthCard() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 text-[#64748B] hover:text-[#0F172A] transition-colors"
+                  className="absolute right-3.5 text-[#64748B] hover:text-[#0F172A] transition-colors cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -282,7 +314,7 @@ export function AuthCard() {
               <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={() => alert("Password reset service is coordinated via your network administrator.")}
+                  onClick={() => alert("Password reset service is coordinated via campus network administrators.")}
                   className="text-xs font-semibold text-[#30AFFF] hover:underline"
                 >
                   Forgot Password?
@@ -307,7 +339,7 @@ export function AuthCard() {
                     <span className="font-bold">{serverResponse.message}</span>
                     {serverResponse.user && (
                       <span className="text-[11px] opacity-90 mt-0.5">
-                        Active Profile: {serverResponse.user.username} ({serverResponse.user.role})
+                        Active Profile: {serverResponse.user.username} &bull; {serverResponse.user.role}
                       </span>
                     )}
                     {serverResponse.error && (
@@ -326,7 +358,7 @@ export function AuthCard() {
                 {isPending ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Verifying with Server...</span>
+                    <span>Verifying with Supabase...</span>
                   </>
                 ) : (
                   <span>Login</span>
@@ -338,7 +370,6 @@ export function AuthCard() {
 
         {/* ─────────────────────────────────────────────────────────────
             THE CURVED SLIDING OVERLAY PANEL
-            Slides smoothly left <-> right using Framer Motion
             ───────────────────────────────────────────────────────────── */}
         <motion.div
           initial={false}
@@ -357,15 +388,13 @@ export function AuthCard() {
           }}
           className="absolute top-0 left-0 w-1/2 h-full bg-[#30AFFF] text-white z-20 flex flex-col items-center justify-center p-10 overflow-hidden shadow-2xl"
         >
-          {/* Subtle eco badge accent inside overlay */}
           <div className="absolute top-6 flex items-center gap-2 px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-[11px] font-semibold text-white border border-white/20">
             <ShieldCheck className="w-3.5 h-3.5 text-[#92EEFF]" />
-            <span>Authorized Operations Only</span>
+            <span>CEIW 2026 Campus Pilot</span>
           </div>
 
           <AnimatePresence mode="wait">
             {mode === "login" ? (
-              /* Content shown when overlay is on the LEFT (prompting to Register) */
               <motion.div
                 key="welcome-prompt"
                 initial={{ opacity: 0, x: -20 }}
@@ -374,7 +403,6 @@ export function AuthCard() {
                 transition={{ duration: 0.28 }}
                 className="flex flex-col items-center text-center gap-5 max-w-[280px]"
               >
-                {/* Logo Image */}
                 <div className="relative w-28 h-28 bg-white rounded-3xl p-3 shadow-md flex items-center justify-center border border-white/30">
                   <Image
                     src="/TubigLoopLogo150x150.png"
@@ -391,7 +419,7 @@ export function AuthCard() {
                     Hello, Welcome!
                   </h1>
                   <p className="text-sm font-medium text-white/90">
-                    Don&apos;t have an account?
+                    Don&apos;t have a campus account?
                   </p>
                 </div>
 
@@ -404,7 +432,6 @@ export function AuthCard() {
                 </button>
               </motion.div>
             ) : (
-              /* Content shown when overlay is on the RIGHT (prompting to Login) */
               <motion.div
                 key="welcome-back-prompt"
                 initial={{ opacity: 0, x: 20 }}
@@ -413,7 +440,6 @@ export function AuthCard() {
                 transition={{ duration: 0.28 }}
                 className="flex flex-col items-center text-center gap-5 max-w-[280px]"
               >
-                {/* Logo Image */}
                 <div className="relative w-28 h-28 bg-white rounded-3xl p-3 shadow-md flex items-center justify-center border border-white/30">
                   <Image
                     src="/TubigLoopLogo150x150.png"
@@ -430,7 +456,7 @@ export function AuthCard() {
                     Welcome Back!
                   </h1>
                   <p className="text-sm font-medium text-white/90">
-                    Already have an account?
+                    Already have a campus account?
                   </p>
                 </div>
 
@@ -449,17 +475,16 @@ export function AuthCard() {
 
       {/* ─────────────────────────────────────────────────────────────
           MOBILE PWA VIEW: Native-Feeling Touch Flow (md:hidden)
-          Creative, clean, high-performance responsive interface
           ───────────────────────────────────────────────────────────── */}
       <div className="w-full md:hidden flex flex-col bg-white rounded-3xl border border-[#E2E8F0] shadow-lg overflow-hidden">
         {/* Mobile Top Hero Header */}
-        <div className="bg-[#30AFFF] text-white p-6 pb-8 flex flex-col items-center text-center rounded-b-[36px] relative shadow-sm">
-          <div className="relative w-20 h-20 bg-white rounded-2xl p-2 shadow-sm mb-3 border border-white/30">
+        <div className="bg-[#30AFFF] text-white p-6 pb-7 flex flex-col items-center text-center rounded-b-[36px] relative shadow-sm">
+          <div className="relative w-18 h-18 bg-white rounded-2xl p-2 shadow-sm mb-2.5 border border-white/30">
             <Image
               src="/TubigLoopLogo150x150.png"
               alt="TubigLoop Logo"
-              width={64}
-              height={64}
+              width={56}
+              height={56}
               priority
               className="object-contain mx-auto"
             />
@@ -469,12 +494,12 @@ export function AuthCard() {
           </h1>
           <p className="text-xs text-white/90 mt-1 max-w-[260px]">
             {mode === "login"
-              ? "Access field assignments, GPS routes, and evidence capture"
-              : "Register as an authorized maintenance or recycling partner"}
+              ? "Access field drainage assignments & custody logs"
+              : "Register as an authorized campus pilot partner"}
           </p>
 
           {/* Segmented Switcher Pill */}
-          <div className="mt-5 w-full max-w-[260px] bg-white/20 p-1 rounded-full flex border border-white/25">
+          <div className="mt-4 w-full max-w-[260px] bg-white/20 p-1 rounded-full flex border border-white/25">
             <button
               type="button"
               onClick={() => toggleMode("login")}
@@ -501,7 +526,7 @@ export function AuthCard() {
         </div>
 
         {/* Mobile Form Body */}
-        <div className="p-6">
+        <div className="p-5">
           <AnimatePresence mode="wait">
             {mode === "login" ? (
               <motion.form
@@ -511,12 +536,12 @@ export function AuthCard() {
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.2 }}
                 onSubmit={handleLoginSubmit}
-                className="flex flex-col gap-4"
+                className="flex flex-col gap-3.5"
               >
                 <div className="relative flex items-center">
                   <input
                     type="text"
-                    placeholder="Username / Email"
+                    placeholder="Email or Username"
                     value={loginUsername}
                     onChange={(e) => setLoginUsername(e.target.value)}
                     disabled={isPending}
@@ -541,7 +566,7 @@ export function AuthCard() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 text-[#64748B] p-1"
+                    className="absolute right-3.5 text-[#64748B] p-1 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -550,7 +575,7 @@ export function AuthCard() {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() => alert("Contact dispatcher or support to reset credentials.")}
+                    onClick={() => alert("Contact campus dispatcher or admin to reset credentials.")}
                     className="text-xs font-semibold text-[#30AFFF]"
                   >
                     Forgot Password?
@@ -587,7 +612,7 @@ export function AuthCard() {
                   {isPending ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Verifying with Server...</span>
+                      <span>Verifying with Supabase...</span>
                     </>
                   ) : (
                     <span>Login</span>
@@ -602,63 +627,58 @@ export function AuthCard() {
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.2 }}
                 onSubmit={handleRegisterSubmit}
-                className="flex flex-col gap-3.5"
+                className="flex flex-col gap-3"
               >
-                {/* Role selection */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRegisterRole("Field Maintenance")}
-                    className={`flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-semibold border ${
-                      registerRole === "Field Maintenance"
-                        ? "bg-[#92EEFF] text-[#0F172A] border-[#30AFFF]"
-                        : "bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0]"
-                    }`}
-                  >
-                    <Wrench className="w-3.5 h-3.5 text-[#30AFFF]" />
-                    <span>Maintenance</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRegisterRole("Partner Recycler")}
-                    className={`flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-semibold border ${
-                      registerRole === "Partner Recycler"
-                        ? "bg-[#D8FFC5] text-[#0F2E1B] border-[#10B981]"
-                        : "bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0]"
-                    }`}
-                  >
-                    <Recycle className="w-3.5 h-3.5 text-[#059669]" />
-                    <span>Recycler</span>
-                  </button>
+                {/* 4 Grand Plan Roles for Mobile */}
+                <div className="grid grid-cols-2 gap-1.5">
+                  {ROLES.map((r) => {
+                    const Icon = r.icon;
+                    const isSelected = registerRole === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setRegisterRole(r.id)}
+                        className={`flex items-center gap-1.5 p-2 rounded-xl text-xs font-semibold border transition-all ${
+                          isSelected
+                            ? r.activeColor
+                            : "bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0]"
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{r.title}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div className="relative flex items-center">
                   <input
                     type="text"
-                    placeholder="Full Name"
+                    placeholder="Full Name / ID"
                     value={registerUsername}
                     onChange={(e) => setRegisterUsername(e.target.value)}
                     disabled={isPending}
-                    className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
+                    className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
                     required
                   />
                   <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
-                    <User className="w-5 h-5" />
+                    <User className="w-4 h-4" />
                   </div>
                 </div>
 
                 <div className="relative flex items-center">
                   <input
                     type="email"
-                    placeholder="Email Address"
+                    placeholder="Official Email"
                     value={registerEmail}
                     onChange={(e) => setRegisterEmail(e.target.value)}
                     disabled={isPending}
-                    className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
+                    className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
                     required
                   />
                   <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
-                    <Mail className="w-5 h-5" />
+                    <Mail className="w-4 h-4" />
                   </div>
                 </div>
 
@@ -669,15 +689,15 @@ export function AuthCard() {
                     value={registerPassword}
                     onChange={(e) => setRegisterPassword(e.target.value)}
                     disabled={isPending}
-                    className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
+                    className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 text-[#64748B] p-1"
+                    className="absolute right-3.5 text-[#64748B] p-1 cursor-pointer"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
 
@@ -706,12 +726,12 @@ export function AuthCard() {
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="w-full h-12 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-all disabled:opacity-60 cursor-pointer"
+                  className="w-full h-11 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-all disabled:opacity-60 cursor-pointer"
                 >
                   {isPending ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Contacting Server...</span>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Registering with Supabase...</span>
                     </>
                   ) : (
                     <span>Register Account</span>
