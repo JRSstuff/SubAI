@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
+import crypto from "crypto";
 
 export interface AuthResponse {
   success: boolean;
@@ -16,7 +17,32 @@ export interface AuthResponse {
 }
 
 /**
+ * Hash password with PBKDF2 and a random cryptographic salt.
+ * No external dependencies needed.
+ */
+function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
+  return `${salt}:${hash}`;
+}
+
+/**
+ * Verify password against stored salt:hash string.
+ */
+function verifyPassword(password: string, combined: string): boolean {
+  try {
+    const [salt, storedHash] = combined.split(":");
+    if (!salt || !storedHash) return false;
+    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
+    return hash === storedHash;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Server-side login verification.
+ * Direct, fast authentication without email verification barriers.
  */
 export async function handleLoginAction(formData: FormData): Promise<AuthResponse> {
   const username = formData.get("username")?.toString().trim();
@@ -36,70 +62,72 @@ export async function handleLoginAction(formData: FormData): Promise<AuthRespons
     };
   }
 
-  if (password.length < 6) {
-    return {
-      success: false,
-      message: "Password must be at least 6 characters.",
-    };
-  }
-
-  // Format email
-  const email = username.includes("@")
-    ? username
-    : `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@tubigloop.local`;
-
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const search = username.toLowerCase();
 
-    if (error) {
-      if (error.message.toLowerCase().includes("invalid login credentials")) {
-        return {
-          success: false,
-          message: "Invalid email or password.",
-        };
-      }
-      if (error.message.toLowerCase().includes("email not confirmed")) {
-        return {
-          success: false,
-          message: "Email not yet confirmed. Please check your inbox or disable 'Confirm email' in Supabase.",
-        };
-      }
+    // Query app_users by email or username/full_name
+    const { data: user, error } = await supabase
+      .from("app_users")
+      .select("id, full_name, email, password_hash, role")
+      .or(`email.eq.${search},full_name.ilike.${username}`)
+      .maybeSingle();
+
+    if (error || !user) {
       return {
         success: false,
-        message: error.message,
+        message: "Invalid email/username or password.",
       };
     }
 
-    const user = data.user;
-    const role = (user?.user_metadata?.role as string) || "reporter";
-    const displayName = (user?.user_metadata?.full_name as string) || username;
+    if (!verifyPassword(password, user.password_hash)) {
+      return {
+        success: false,
+        message: "Invalid email/username or password.",
+      };
+    }
+
+    // Set secure HTTP-only session cookie
+    cookieStore.set(
+      "tubigloop_session",
+      JSON.stringify({
+        id: user.id,
+        username: user.full_name,
+        email: user.email,
+        role: user.role,
+      }),
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      }
+    );
 
     return {
       success: true,
-      message: `Welcome back, ${displayName}!`,
+      message: `Welcome back, ${user.full_name}!`,
       user: {
-        id: user?.id,
-        username: displayName,
-        email: user?.email,
-        role: role.toUpperCase(),
+        id: user.id,
+        username: user.full_name,
+        email: user.email,
+        role: String(user.role).toUpperCase(),
       },
     };
   } catch (err: unknown) {
     return {
       success: false,
-      message: err instanceof Error ? err.message : "Unable to connect. Please try again.",
+      message: err instanceof Error ? err.message : "Unable to sign in. Please try again.",
     };
   }
 }
 
 /**
  * Server-side registration verification.
+ * Direct database registration without third-party email rate limits.
  */
 export async function handleRegisterAction(formData: FormData): Promise<AuthResponse> {
   const username = formData.get("username")?.toString().trim();
@@ -135,55 +163,73 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: username,
-          role: role,
-        },
-      },
-    });
+    // 1. Check if an account already exists with this email
+    const { data: existingUser } = await supabase
+      .from("app_users")
+      .select("id")
+      .eq("email", email.toLowerCase())
+      .maybeSingle();
 
-    if (error) {
-      // Handle Supabase free email rate limit specifically
-      if (
-        error.message.toLowerCase().includes("rate limit") ||
-        error.message.toLowerCase().includes("over_email_send_rate_limit")
-      ) {
-        return {
-          success: false,
-          message: "Email rate limit reached. Disable 'Confirm email' in Supabase Auth settings to test instantly.",
-        };
-      }
-
-      return {
-        success: false,
-        message: error.message,
-      };
-    }
-
-    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    if (existingUser) {
       return {
         success: false,
         message: "An account with this email already exists. Please sign in.",
       };
     }
 
-    const user = data.user;
-    const isEmailConfirmPending = user && !data.session;
+    // 2. Fetch default pilot site
+    const { data: defaultSite } = await supabase
+      .from("sites")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
+
+    // 3. Insert directly into app_users table
+    const { data: newUser, error: insertError } = await supabase
+      .from("app_users")
+      .insert({
+        full_name: username,
+        email: email.toLowerCase(),
+        password_hash: hashPassword(password),
+        role: role,
+        site_id: defaultSite?.id || null,
+      })
+      .select("id, full_name, email, role")
+      .single();
+
+    if (insertError) {
+      return {
+        success: false,
+        message: insertError.message || "Registration failed. Please try again.",
+      };
+    }
+
+    // 4. Set session cookie immediately
+    cookieStore.set(
+      "tubigloop_session",
+      JSON.stringify({
+        id: newUser.id,
+        username: newUser.full_name,
+        email: newUser.email,
+        role: newUser.role,
+      }),
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+      }
+    );
 
     return {
       success: true,
-      message: isEmailConfirmPending
-        ? "Account created! Please check your email to confirm."
-        : "Account created successfully!",
+      message: "Account created successfully!",
       user: {
-        id: user?.id,
-        username,
-        email,
-        role: role.toUpperCase(),
+        id: newUser.id,
+        username: newUser.full_name,
+        email: newUser.email,
+        role: String(newUser.role).toUpperCase(),
       },
     };
   } catch (err: unknown) {
