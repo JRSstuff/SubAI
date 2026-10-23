@@ -50,7 +50,9 @@ export async function handleLoginAction(formData: FormData): Promise<AuthRespons
   }
 
   // Format email (if username doesn't contain '@', format as local campus pilot alias)
-  const email = username.includes("@") ? username : `${username.toLowerCase().replace(/\s+/g, "")}@tubigloop.local`;
+  const email = username.includes("@")
+    ? username
+    : `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@tubigloop.local`;
 
   try {
     const cookieStore = await cookies();
@@ -99,7 +101,11 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
   const username = formData.get("username")?.toString().trim();
   const email = formData.get("email")?.toString().trim();
   const password = formData.get("password")?.toString();
-  const role = formData.get("role")?.toString().trim().toLowerCase() || "reporter";
+  const rawRole = formData.get("role")?.toString().trim().toLowerCase() || "reporter";
+
+  // Sanitize role to valid schema enums
+  const validRoles = ["reporter", "reviewer", "collector", "recycler", "admin"];
+  const role = validRoles.includes(rawRole) ? rawRole : "reporter";
 
   if (!username || username.length < 3) {
     return {
@@ -148,11 +154,23 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
       };
     }
 
+    // In Supabase Auth, existing users return with empty identities without a hard error
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return {
+        success: false,
+        message: "Server Registration Conflict",
+        error: "An account with this email address already exists. Please sign in instead.",
+      };
+    }
+
     const user = data.user;
+    const isEmailConfirmPending = user && !data.session;
 
     return {
       success: true,
-      message: `Server 201 Created: Account provisioned for ${username} (${role.toUpperCase()}).`,
+      message: isEmailConfirmPending
+        ? `Server 201 Created: Account created for ${username} (${role.toUpperCase()})! If email confirmation is enabled on your Supabase project, check your inbox to confirm.`
+        : `Server 201 Created: Account successfully provisioned for ${username} (${role.toUpperCase()}).`,
       user: {
         id: user?.id,
         username,

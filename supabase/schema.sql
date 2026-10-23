@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS public.reports (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 3.4 Cleanup Tasks & Transparent Priority Scoring
+-- 3.4 Cleanup Tasks & Transparent Priority Scoring (0 to 5)
 CREATE TABLE IF NOT EXISTS public.cleanup_tasks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     report_id UUID NOT NULL REFERENCES public.reports(id) ON DELETE CASCADE UNIQUE,
@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS public.audit_events (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 4. Automatic Sequence for Reference Numbers (e.g. TL-2026-0001)
+-- 4. Auto Sequence for Reference Numbers (TL-YYYY-0001)
 CREATE SEQUENCE IF NOT EXISTS report_ref_seq START WITH 1;
 
 CREATE OR REPLACE FUNCTION generate_report_ref()
@@ -227,26 +227,50 @@ CREATE TRIGGER trg_generate_report_ref
     FOR EACH ROW
     EXECUTE FUNCTION generate_report_ref();
 
--- 5. Trigger: Auto-Provision Profile on auth.users Sign-Up
+-- 5. Safe Trigger: Auto-Provision Profile on auth.users Sign-Up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
 DECLARE
     default_site UUID;
+    user_assigned_role public.user_role;
+    raw_role_text TEXT;
 BEGIN
+    -- Safely find default pilot site if exists
     SELECT id INTO default_site FROM public.sites LIMIT 1;
+
+    -- Safely parse role text without crashing if missing or invalid
+    raw_role_text := LOWER(COALESCE(NEW.raw_user_meta_data->>'role', 'reporter'));
+    
+    IF raw_role_text IN ('reporter', 'reviewer', 'collector', 'recycler', 'admin') THEN
+        user_assigned_role := raw_role_text::public.user_role;
+    ELSE
+        user_assigned_role := 'reporter'::public.user_role;
+    END IF;
+
+    -- Insert profile safely
     INSERT INTO public.profiles (id, full_name, role, site_id)
     VALUES (
         NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
-        COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'reporter'),
+        user_assigned_role,
         default_site
     )
     ON CONFLICT (id) DO UPDATE SET
         full_name = EXCLUDED.full_name,
-        role = EXCLUDED.role;
+        role = EXCLUDED.role,
+        updated_at = now();
+
+    RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+    -- Prevent transaction rollback on auth.users if profiles has an issue
+    RAISE WARNING 'handle_new_user error: %', SQLERRM;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
@@ -263,19 +287,18 @@ ALTER TABLE public.handovers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_analyses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_events ENABLE ROW LEVEL SECURITY;
 
--- 6.1 Sites: Public Read
 CREATE POLICY "Sites are readable by all authenticated users"
     ON public.sites FOR SELECT TO authenticated USING (true);
 
--- 6.2 Profiles: All authenticated can read names/roles; owners can update self
 CREATE POLICY "Profiles are readable by authenticated users"
     ON public.profiles FOR SELECT TO authenticated USING (true);
 
 CREATE POLICY "Users can update own profile"
-    ON public.profiles FOR UPDATE TO authenticated
-    USING (auth.uid() = id);
+    ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
 
--- 6.3 Reports: Authenticated can read; reporters can submit; reviewers/admins can update
+CREATE POLICY "Profiles can be inserted by auth trigger"
+    ON public.profiles FOR INSERT WITH CHECK (true);
+
 CREATE POLICY "Reports readable by authenticated"
     ON public.reports FOR SELECT TO authenticated USING (true);
 
@@ -285,39 +308,24 @@ CREATE POLICY "Reporters can insert reports"
 
 CREATE POLICY "Reviewers and admins can update reports"
     ON public.reports FOR UPDATE TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role IN ('reviewer', 'admin')
-        )
-    );
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('reviewer', 'admin')));
 
--- 6.4 Tasks: Accessible by assigned collector, reviewers, and admins
 CREATE POLICY "Tasks readable by authenticated"
     ON public.cleanup_tasks FOR SELECT TO authenticated USING (true);
 
 CREATE POLICY "Reviewers and admins can manage tasks"
     ON public.cleanup_tasks FOR ALL TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role IN ('reviewer', 'admin')
-        )
-    );
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('reviewer', 'admin')));
 
 CREATE POLICY "Collectors can update assigned task progress"
-    ON public.cleanup_tasks FOR UPDATE TO authenticated
-    USING (assignee_id = auth.uid());
+    ON public.cleanup_tasks FOR UPDATE TO authenticated USING (assignee_id = auth.uid());
 
--- 6.5 Collection Batches: Collectors can insert & view; Reviewers can audit
 CREATE POLICY "Batches readable by authenticated"
     ON public.collection_batches FOR SELECT TO authenticated USING (true);
 
 CREATE POLICY "Collectors can insert collection batches"
-    ON public.collection_batches FOR INSERT TO authenticated
-    WITH CHECK (collector_id = auth.uid());
+    ON public.collection_batches FOR INSERT TO authenticated WITH CHECK (collector_id = auth.uid());
 
--- 6.6 Handovers: Collectors & Recyclers can log; Reviewers can confirm
 CREATE POLICY "Handovers readable by authenticated"
     ON public.handovers FOR SELECT TO authenticated USING (true);
 
@@ -326,14 +334,9 @@ CREATE POLICY "Collectors and recyclers can log handovers"
 
 CREATE POLICY "Reviewers and admins can confirm handovers"
     ON public.handovers FOR UPDATE TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role IN ('reviewer', 'admin')
-        )
-    );
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('reviewer', 'admin')));
 
--- 7. Storage Bucket Initialization (SQL Helper)
+-- 7. Storage Bucket Initialization
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('report-photos', 'report-photos', true)
 ON CONFLICT (id) DO NOTHING;
@@ -342,15 +345,11 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('evidence-photos', 'evidence-photos', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Storage Policies
 CREATE POLICY "Public Read Access for Report Photos"
-    ON storage.objects FOR SELECT
-    USING (bucket_id = 'report-photos');
+    ON storage.objects FOR SELECT USING (bucket_id = 'report-photos');
 
 CREATE POLICY "Authenticated Users Can Upload Report Photos"
-    ON storage.objects FOR INSERT TO authenticated
-    WITH CHECK (bucket_id = 'report-photos');
+    ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'report-photos');
 
 CREATE POLICY "Authenticated Users Can Upload Evidence Photos"
-    ON storage.objects FOR INSERT TO authenticated
-    WITH CHECK (bucket_id = 'evidence-photos');
+    ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'evidence-photos');
