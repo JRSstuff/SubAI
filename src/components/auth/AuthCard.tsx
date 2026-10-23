@@ -55,7 +55,7 @@ export function AuthCard() {
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // Server response state (Rule 1: Real Server Truth)
+  // Server response state
   const [serverResponse, setServerResponse] = useState<AuthResponse | null>(null);
 
   // Form field states
@@ -67,7 +67,6 @@ export function AuthCard() {
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerRole, setRegisterRole] = useState("reporter");
 
-  // Clear server messages when switching tabs
   const toggleMode = (newMode: "login" | "register") => {
     setServerResponse(null);
     setMode(newMode);
@@ -85,11 +84,10 @@ export function AuthCard() {
       try {
         const res = await handleLoginAction(formData);
         setServerResponse(res);
-      } catch (err: unknown) {
+      } catch {
         setServerResponse({
           success: false,
-          message: "Server Connection Error",
-          error: err instanceof Error ? err.message : "Failed to connect to authentication server.",
+          message: "Unable to sign in. Please try again.",
         });
       }
     });
@@ -109,11 +107,10 @@ export function AuthCard() {
       try {
         const res = await handleRegisterAction(formData);
         setServerResponse(res);
-      } catch (err: unknown) {
+      } catch {
         setServerResponse({
           success: false,
-          message: "Server Connection Error",
-          error: err instanceof Error ? err.message : "Failed to provision account on server.",
+          message: "Unable to create account. Please try again.",
         });
       }
     });
@@ -221,26 +218,21 @@ export function AuthCard() {
                 </button>
               </div>
 
-              {/* Real Server Response Status Banner */}
+              {/* Clean Status Banner */}
               {serverResponse && mode === "register" && (
                 <div
-                  className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs font-medium transition-all ${
+                  className={`p-3 rounded-xl border flex items-center gap-2.5 text-xs font-semibold transition-all ${
                     serverResponse.success
                       ? "bg-[#C4F7CA] text-[#064E3B] border-[#86EFAC]"
                       : "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]"
                   }`}
                 >
                   {serverResponse.success ? (
-                    <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
                   ) : (
-                    <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
+                    <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
                   )}
-                  <div className="flex flex-col">
-                    <span className="font-bold">{serverResponse.message}</span>
-                    {serverResponse.error && (
-                      <span className="text-[11px] opacity-90 mt-0.5">{serverResponse.error}</span>
-                    )}
-                  </div>
+                  <span>{serverResponse.message}</span>
                 </div>
               )}
 
@@ -253,7 +245,7 @@ export function AuthCard() {
                 {isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Registering with Supabase...</span>
+                    <span>Creating account...</span>
                   </>
                 ) : (
                   <span>Create Campus Account</span>
@@ -314,38 +306,28 @@ export function AuthCard() {
               <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={() => alert("Password reset service is coordinated via campus network administrators.")}
+                  onClick={() => alert("Password reset is coordinated via your campus administrator.")}
                   className="text-xs font-semibold text-[#30AFFF] hover:underline"
                 >
                   Forgot Password?
                 </button>
               </div>
 
-              {/* Real Server Response Status Banner */}
+              {/* Clean Status Banner */}
               {serverResponse && mode === "login" && (
                 <div
-                  className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs font-medium transition-all ${
+                  className={`p-3 rounded-xl border flex items-center gap-2.5 text-xs font-semibold transition-all ${
                     serverResponse.success
                       ? "bg-[#C4F7CA] text-[#064E3B] border-[#86EFAC]"
                       : "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]"
                   }`}
                 >
                   {serverResponse.success ? (
-                    <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
                   ) : (
-                    <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
+                    <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
                   )}
-                  <div className="flex flex-col">
-                    <span className="font-bold">{serverResponse.message}</span>
-                    {serverResponse.user && (
-                      <span className="text-[11px] opacity-90 mt-0.5">
-                        Active Profile: {serverResponse.user.username} &bull; {serverResponse.user.role}
-                      </span>
-                    )}
-                    {serverResponse.error && (
-                      <span className="text-[11px] opacity-90 mt-0.5">{serverResponse.error}</span>
-                    )}
-                  </div>
+                  <span>{serverResponse.message}</span>
                 </div>
               )}
 
@@ -358,7 +340,7 @@ export function AuthCard() {
                 {isPending ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Verifying with Supabase...</span>
+                    <span>Signing in...</span>
                   </>
                 ) : (
                   <span>Login</span>
@@ -575,7 +557,7 @@ export function AuthCard() {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() => alert("Contact campus dispatcher or admin to reset credentials.")}
+                    onClick={() => alert("Contact campus admin to reset credentials.")}
                     className="text-xs font-semibold text-[#30AFFF]"
                   >
                     Forgot Password?
@@ -584,23 +566,18 @@ export function AuthCard() {
 
                 {serverResponse && (
                   <div
-                    className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs font-medium transition-all ${
+                    className={`p-3 rounded-xl border flex items-center gap-2.5 text-xs font-semibold transition-all ${
                       serverResponse.success
                         ? "bg-[#C4F7CA] text-[#064E3B] border-[#86EFAC]"
                         : "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]"
                     }`}
                   >
                     {serverResponse.success ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
+                      <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
                     ) : (
-                      <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
+                      <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
                     )}
-                    <div className="flex flex-col">
-                      <span className="font-bold">{serverResponse.message}</span>
-                      {serverResponse.error && (
-                        <span className="text-[11px] opacity-90 mt-0.5">{serverResponse.error}</span>
-                      )}
-                    </div>
+                    <span>{serverResponse.message}</span>
                   </div>
                 )}
 
@@ -612,7 +589,7 @@ export function AuthCard() {
                   {isPending ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Verifying with Supabase...</span>
+                      <span>Signing in...</span>
                     </>
                   ) : (
                     <span>Login</span>
@@ -639,7 +616,7 @@ export function AuthCard() {
                         key={r.id}
                         type="button"
                         onClick={() => setRegisterRole(r.id)}
-                        className={`flex items-center gap-1.5 p-2 rounded-xl text-xs font-semibold border transition-all ${
+                        className={`flex items-center gap-1.5 p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                           isSelected
                             ? r.activeColor
                             : "bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0]"
@@ -703,23 +680,18 @@ export function AuthCard() {
 
                 {serverResponse && (
                   <div
-                    className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs font-medium transition-all ${
+                    className={`p-3 rounded-xl border flex items-center gap-2.5 text-xs font-semibold transition-all ${
                       serverResponse.success
                         ? "bg-[#C4F7CA] text-[#064E3B] border-[#86EFAC]"
                         : "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]"
                     }`}
                   >
                     {serverResponse.success ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
+                      <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
                     ) : (
-                      <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
+                      <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
                     )}
-                    <div className="flex flex-col">
-                      <span className="font-bold">{serverResponse.message}</span>
-                      {serverResponse.error && (
-                        <span className="text-[11px] opacity-90 mt-0.5">{serverResponse.error}</span>
-                      )}
-                    </div>
+                    <span>{serverResponse.message}</span>
                   </div>
                 )}
 
@@ -730,8 +702,8 @@ export function AuthCard() {
                 >
                   {isPending ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Registering with Supabase...</span>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Creating account...</span>
                     </>
                   ) : (
                     <span>Register Account</span>
