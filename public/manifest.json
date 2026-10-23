@@ -1,0 +1,23 @@
+{
+  "name": "TubigLoop",
+  "short_name": "TubigLoop",
+  "description": "Coordinating information, assignments, and evidence for water maintenance and recycling partners.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#30AFFF",
+  "icons": [
+    {
+      "src": "/TubigLoopLogo150x150.png",
+      "sizes": "150x150",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/TubigLoopLogoWithText.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
