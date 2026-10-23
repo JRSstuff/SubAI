@@ -247,3 +247,35 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
     };
   }
 }
+
+/**
+ * Clear session cookie on logout.
+ */
+export async function handleLogoutAction(): Promise<{ success: boolean }> {
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete("tubigloop_session");
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
+}
+
+/**
+ * Retrieve current authenticated session user.
+ */
+export async function getCurrentUserAction(): Promise<{
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+} | null> {
+  try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("tubigloop_session")?.value;
+    if (!sessionCookie) return null;
+    return JSON.parse(sessionCookie);
+  } catch {
+    return null;
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -14,6 +14,7 @@ import {
   LogOut,
   User,
 } from "lucide-react";
+import { getCurrentUserAction, handleLogoutAction } from "@/app/actions/auth";
 
 interface NavbarProps {
   currentUser?: {
@@ -35,6 +36,23 @@ const NAV_ITEMS = [
 
 export function Navbar({ currentUser, onLogout }: NavbarProps) {
   const pathname = usePathname();
+  const [user, setUser] = useState(currentUser || null);
+
+  useEffect(() => {
+    if (!currentUser) {
+      getCurrentUserAction().then((u) => {
+        if (u) setUser(u);
+      });
+    } else {
+      setUser(currentUser);
+    }
+  }, [currentUser]);
+
+  const handleSignOut = async () => {
+    if (onLogout) onLogout();
+    await handleLogoutAction();
+    window.location.href = "/";
+  };
 
   // If on login/register root, don't show the full nav header
   if (pathname === "/") {
@@ -86,23 +104,23 @@ export function Navbar({ currentUser, onLogout }: NavbarProps) {
               <User className="w-3.5 h-3.5" />
             </div>
             <div className="flex flex-col text-left">
-              <span className="font-bold text-[#0F172A] leading-tight truncate max-w-[120px]">
-                {currentUser?.username || "Campus Pilot User"}
+              <span className="font-bold text-[#0F172A] leading-tight truncate max-w-[130px]">
+                {user?.username || "Campus Pilot User"}
               </span>
               <span className="text-[10px] text-[#64748B] font-semibold uppercase tracking-wider">
-                {currentUser?.role || "REPORTER"}
+                {user?.role || "REPORTER"}
               </span>
             </div>
           </div>
 
-          <Link
-            href="/"
-            onClick={onLogout}
+          <button
+            type="button"
+            onClick={handleSignOut}
             title="Switch User / Sign Out"
-            className="p-2 rounded-xl border border-[#E2E8F0] text-[#64748B] hover:text-[#DC2626] hover:bg-[#FEE2E2]/50 hover:border-[#FCA5A5] transition-all"
+            className="p-2 rounded-xl border border-[#E2E8F0] text-[#64748B] hover:text-[#DC2626] hover:bg-[#FEE2E2]/50 hover:border-[#FCA5A5] transition-all cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
-          </Link>
+          </button>
         </div>
       </header>
 

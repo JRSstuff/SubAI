@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Loader2, Navigation, Layers, CheckCircle2 } from "lucide-react";
+import { Loader2, Navigation, Layers } from "lucide-react";
 
 export interface MapReportPin {
   id: string;
@@ -34,6 +34,12 @@ export function CampusMap({
   const mapInstanceRef = useRef<any>(null);
   const markerGroupRef = useRef<any>(null);
   const selectedMarkerRef = useRef<any>(null);
+  const onLocationSelectRef = useRef(onLocationSelect);
+
+  // Keep callback ref fresh without triggering effects
+  useEffect(() => {
+    onLocationSelectRef.current = onLocationSelect;
+  }, [onLocationSelect]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -44,13 +50,34 @@ export function CampusMap({
 
   useEffect(() => {
     let isMounted = true;
+    let localMap: any = null;
 
     async function initMap() {
-      if (!mapContainerRef.current || mapInstanceRef.current) return;
+      if (!mapContainerRef.current) return;
+
+      // Clean up previous instance or lingering Leaflet container metadata
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove();
+        } catch {
+          // ignore
+        }
+        mapInstanceRef.current = null;
+      }
+
+      if (mapContainerRef.current && (mapContainerRef.current as any)._leaflet_id != null) {
+        delete (mapContainerRef.current as any)._leaflet_id;
+      }
 
       const L = (await import("leaflet")).default;
+      if (!isMounted || !mapContainerRef.current) return;
 
-      // Ensure Leaflet assets don't 404
+      // Check again after dynamic import
+      if ((mapContainerRef.current as any)._leaflet_id != null) {
+        delete (mapContainerRef.current as any)._leaflet_id;
+      }
+
+      // Configure default marker icons
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -60,44 +87,72 @@ export function CampusMap({
 
       const initialCenter = selectedCoords || defaultCenter;
 
-      const map = L.map(mapContainerRef.current, {
-        center: [initialCenter.lat, initialCenter.lng],
-        zoom: 17,
-        zoomControl: false,
-      });
+      try {
+        localMap = L.map(mapContainerRef.current, {
+          center: [initialCenter.lat, initialCenter.lng],
+          zoom: 17,
+          zoomControl: false,
+        });
+      } catch (err) {
+        console.warn("Leaflet init handled:", err);
+        return;
+      }
 
-      L.control.zoom({ position: "topright" }).addTo(map);
+      if (!isMounted) {
+        localMap.remove();
+        return;
+      }
+
+      mapInstanceRef.current = localMap;
+
+      L.control.zoom({ position: "topright" }).addTo(localMap);
 
       // OpenStreetMap clean raster tiles with official attribution
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
-      }).addTo(map);
+      }).addTo(localMap);
 
-      const markerGroup = L.layerGroup().addTo(map);
+      const markerGroup = L.layerGroup().addTo(localMap);
       markerGroupRef.current = markerGroup;
-      mapInstanceRef.current = map;
 
       // Handle click for location selection
-      if (selectable && onLocationSelect) {
-        map.on("click", (e: any) => {
+      if (selectable) {
+        localMap.on("click", (e: any) => {
           const { lat, lng } = e.latlng;
-          onLocationSelect({ lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) });
+          if (onLocationSelectRef.current) {
+            onLocationSelectRef.current({
+              lat: Number(lat.toFixed(6)),
+              lng: Number(lng.toFixed(6)),
+            });
+          }
         });
       }
 
-      if (isMounted) {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
 
     initMap();
 
     return () => {
       isMounted = false;
+      if (localMap) {
+        try {
+          localMap.remove();
+        } catch {
+          // ignore
+        }
+      }
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        try {
+          mapInstanceRef.current.remove();
+        } catch {
+          // ignore
+        }
         mapInstanceRef.current = null;
+      }
+      if (mapContainerRef.current && (mapContainerRef.current as any)._leaflet_id != null) {
+        delete (mapContainerRef.current as any)._leaflet_id;
       }
     };
   }, []);
@@ -107,6 +162,7 @@ export function CampusMap({
     if (!mapInstanceRef.current || !markerGroupRef.current) return;
 
     import("leaflet").then((LModule) => {
+      if (!mapInstanceRef.current || !markerGroupRef.current) return;
       const L = LModule.default;
       markerGroupRef.current.clearLayers();
 
@@ -166,10 +222,15 @@ export function CampusMap({
     if (!mapInstanceRef.current || !selectedCoords) return;
 
     import("leaflet").then((LModule) => {
+      if (!mapInstanceRef.current) return;
       const L = LModule.default;
 
       if (selectedMarkerRef.current) {
-        selectedMarkerRef.current.remove();
+        try {
+          selectedMarkerRef.current.remove();
+        } catch {
+          // ignore
+        }
       }
 
       const activePinSvg = `
@@ -191,13 +252,15 @@ export function CampusMap({
         draggable: selectable,
       }).addTo(mapInstanceRef.current);
 
-      if (selectable && onLocationSelect) {
+      if (selectable) {
         marker.on("dragend", (e: any) => {
           const pos = e.target.getLatLng();
-          onLocationSelect({
-            lat: Number(pos.lat.toFixed(6)),
-            lng: Number(pos.lng.toFixed(6)),
-          });
+          if (onLocationSelectRef.current) {
+            onLocationSelectRef.current({
+              lat: Number(pos.lat.toFixed(6)),
+              lng: Number(pos.lng.toFixed(6)),
+            });
+          }
         });
       }
 
@@ -206,7 +269,7 @@ export function CampusMap({
         animate: true,
       });
     });
-  }, [selectedCoords, selectable, onLocationSelect]);
+  }, [selectedCoords, selectable]);
 
   // Handle GPS Auto-Locate
   const handleLocateMe = () => {
@@ -226,8 +289,8 @@ export function CampusMap({
           lng: Number(longitude.toFixed(6)),
         };
 
-        if (onLocationSelect) {
-          onLocationSelect(coords);
+        if (onLocationSelectRef.current) {
+          onLocationSelectRef.current(coords);
         }
 
         if (mapInstanceRef.current) {
@@ -237,7 +300,7 @@ export function CampusMap({
         }
         setGpsLoading(false);
       },
-      (err) => {
+      () => {
         setGpsLoading(false);
         setGpsError("Unable to retrieve GPS. Please select pin on map.");
       },
