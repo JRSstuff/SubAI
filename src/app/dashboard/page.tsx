@@ -98,7 +98,7 @@ export default function DashboardPage() {
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#C4F7CA] text-[#064E3B] border border-[#86EFAC]">
                 Step 6 & 7: Verified Circular Impact
               </span>
-              <span className="text-xs text-[#64748B] font-medium">CEIW 2026 Audit Dashboard</span>
+              <span className="text-xs text-[#64748B] font-medium">Circular Material Audit</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0F172A]">
               Impact & Mass Balance Reconciliation

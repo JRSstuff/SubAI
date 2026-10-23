@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   TrendingUp,
   RotateCcw,
-  Sparkles,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 
@@ -434,19 +433,6 @@ export default function RainBankPage() {
                   </p>
                 </div>
               </div>
-            </div>
-
-            {/* Pitch & Competition Value Note */}
-            <div className="p-5 bg-white border border-[#CBD5E1] rounded-2xl shadow-sm text-xs space-y-2">
-              <div className="flex items-center gap-2 font-bold text-[#0F172A]">
-                <Sparkles className="w-4 h-4 text-[#30AFFF]" />
-                CEIW 2026 Presentation Context
-              </div>
-              <p className="text-[#64748B] leading-relaxed">
-                By pairing <strong>active drainage clearing</strong> with <strong>roof rainwater harvesting models</strong>,
-                TubigLoop shows higher education institutions how unobstructed runoff can be diverted into productive non-potable reserves
-                rather than overwhelming campus drainage channels during Cagayan de Oro peak monsoon events.
-              </p>
             </div>
           </div>
         </div>

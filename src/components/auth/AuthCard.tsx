@@ -421,7 +421,7 @@ export function AuthCard() {
               >
                 <h3 className="text-2xl font-black tracking-tight text-white">Hello, Student!</h3>
                 <p className="text-xs text-white/90 leading-relaxed max-w-[280px]">
-                  Register your account to report campus drainage blocks and contribute to CEIW 2026 circular water data.
+                  Register your account to report campus drainage blocks and track recovery operations.
                 </p>
                 <button
                   type="button"
@@ -474,7 +474,7 @@ export function AuthCard() {
             />
           </div>
           <p className="text-xs text-white/90 font-medium">
-            CEIW 2026 Campus Drainage Circular System
+            Campus Drainage & Material Recovery Terminal
           </p>
 
           {/* Segmented Switcher Pill */}

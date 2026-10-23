@@ -31,7 +31,6 @@ const QUICK_LANDMARKS = [
 
 export default function ReportPage() {
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
-  const [photoStats, setPhotoStats] = useState<{ orig: number; comp: number } | null>(null);
 
   const [locationName, setLocationName] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({
@@ -61,9 +60,8 @@ export default function ReportPage() {
     if (!file) return;
 
     try {
-      const { base64, originalSizeKb, compressedSizeKb } = await compressImage(file);
+      const { base64 } = await compressImage(file);
       setPhotoBase64(base64);
-      setPhotoStats({ orig: originalSizeKb, comp: compressedSizeKb });
       setSubmissionResult(null);
 
       // Trigger Gemini Multimodal Vision Scan
@@ -83,7 +81,6 @@ export default function ReportPage() {
 
   const handleRetake = () => {
     setPhotoBase64(null);
-    setPhotoStats(null);
     setAiResult(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -139,7 +136,6 @@ export default function ReportPage() {
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#92EEFF] text-[#0F172A] border border-[#30AFFF]">
               Step 1: Submit Report
             </span>
-            <span className="text-xs text-[#64748B] font-medium">CEIW 2026 Campus Pilot</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0F172A]">
             Report Drainage Obstruction
@@ -157,11 +153,6 @@ export default function ReportPage() {
                 <Camera className="w-4 h-4 text-[#30AFFF]" />
                 <span>1. Photographic Evidence</span>
               </label>
-              {photoStats && (
-                <span className="text-[11px] font-semibold text-[#059669] bg-[#D8FFC5] px-2 py-0.5 rounded-md">
-                  Compressed: {photoStats.orig}KB &rarr; {photoStats.comp}KB
-                </span>
-              )}
             </div>
 
             {!photoBase64 ? (
