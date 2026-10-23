@@ -75,7 +75,7 @@ export async function handleLoginAction(formData: FormData): Promise<AuthRespons
       .or(`email.eq.${search},full_name.ilike.${username}`)
       .maybeSingle();
 
-    if (error || !user) {
+    if (error || !user || !user.password_hash) {
       return {
         success: false,
         message: "Invalid email/username or password.",
@@ -89,23 +89,27 @@ export async function handleLoginAction(formData: FormData): Promise<AuthRespons
       };
     }
 
-    // Set secure HTTP-only session cookie
-    cookieStore.set(
-      "tubigloop_session",
-      JSON.stringify({
-        id: user.id,
-        username: user.full_name,
-        email: user.email,
-        role: user.role,
-      }),
-      {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      }
-    );
+    // Safely set secure HTTP-only session cookie
+    try {
+      cookieStore.set(
+        "tubigloop_session",
+        JSON.stringify({
+          id: user.id,
+          username: user.full_name,
+          email: user.email,
+          role: user.role,
+        }),
+        {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        }
+      );
+    } catch (cookieErr) {
+      console.warn("Session cookie warning:", cookieErr);
+    }
 
     return {
       success: true,
@@ -197,30 +201,34 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
       .select("id, full_name, email, role")
       .single();
 
-    if (insertError) {
+    if (insertError || !newUser) {
       return {
         success: false,
-        message: insertError.message || "Registration failed. Please try again.",
+        message: insertError?.message || "Registration failed. Please check your database tables.",
       };
     }
 
-    // 4. Set session cookie immediately
-    cookieStore.set(
-      "tubigloop_session",
-      JSON.stringify({
-        id: newUser.id,
-        username: newUser.full_name,
-        email: newUser.email,
-        role: newUser.role,
-      }),
-      {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-      }
-    );
+    // 4. Safely set session cookie immediately
+    try {
+      cookieStore.set(
+        "tubigloop_session",
+        JSON.stringify({
+          id: newUser.id,
+          username: newUser.full_name,
+          email: newUser.email,
+          role: newUser.role,
+        }),
+        {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 7,
+        }
+      );
+    } catch (cookieErr) {
+      console.warn("Session cookie warning:", cookieErr);
+    }
 
     return {
       success: true,
