@@ -195,7 +195,7 @@ export default function ReviewPage() {
                     onClick={() => openTriageModal(report)}
                     className="px-3 py-1.5 bg-[#30AFFF] hover:bg-[#1f9eef] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs"
                   >
-                    Triage & Assign
+                    Triage
                   </button>
                 </div>
               </div>
@@ -233,10 +233,10 @@ export default function ReviewPage() {
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { val: "Verified", label: "Verify & Dispatch", color: "bg-[#D8FFC5] border-[#86EFAC] text-[#064E3B]" },
-                      { val: "Needs inspection", label: "Needs Inspection", color: "bg-[#FEF08A] border-[#FDE047] text-[#854D0E]" },
-                      { val: "Duplicate", label: "Mark Duplicate", color: "bg-[#F1F5F9] border-[#CBD5E1] text-[#475569]" },
-                      { val: "Rejected", label: "Reject Report", color: "bg-[#FEE2E2] border-[#FCA5A5] text-[#991B1B]" },
+                      { val: "Verified", label: "Verify", color: "bg-[#D8FFC5] border-[#86EFAC] text-[#064E3B]" },
+                      { val: "Needs inspection", label: "Inspect", color: "bg-[#FEF08A] border-[#FDE047] text-[#854D0E]" },
+                      { val: "Duplicate", label: "Duplicate", color: "bg-[#F1F5F9] border-[#CBD5E1] text-[#475569]" },
+                      { val: "Rejected", label: "Reject", color: "bg-[#FEE2E2] border-[#FCA5A5] text-[#991B1B]" },
                     ].map((dec) => (
                       <button
                         key={dec.val}
@@ -395,10 +395,10 @@ export default function ReviewPage() {
                   {isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Saving Decision...</span>
+                      <span>Saving...</span>
                     </>
                   ) : (
-                    <span>Commit Triage & Dispatch Task</span>
+                    <span>Dispatch</span>
                   )}
                 </button>
               </form>

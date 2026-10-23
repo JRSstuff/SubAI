@@ -100,7 +100,7 @@ export default function MapPage() {
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>Map View</span>
+                <span>Map</span>
               </button>
               <button
                 type="button"
@@ -112,7 +112,7 @@ export default function MapPage() {
                 }`}
               >
                 <ListFilter className="w-3.5 h-3.5" />
-                <span>List View</span>
+                <span>List</span>
               </button>
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function MapPage() {
                   href="/report"
                   className="mt-2 px-4 py-2 bg-[#30AFFF] text-white text-xs font-bold rounded-xl"
                 >
-                  Submit a New Report
+                  Report
                 </Link>
               </div>
             ) : (
@@ -229,7 +229,7 @@ export default function MapPage() {
                         href="/review"
                         className="flex items-center gap-1 text-xs font-bold text-[#30AFFF] hover:underline"
                       >
-                        <span>Triage Report</span>
+                        <span>Triage</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                     </div>

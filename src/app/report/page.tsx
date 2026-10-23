@@ -174,7 +174,7 @@ export default function ReportPage() {
                 </div>
                 <div className="flex flex-col items-center text-center px-4">
                   <span className="text-sm font-bold text-[#0F172A]">
-                    Tap to Open Camera or Upload Image
+                    Take Photo / Upload
                   </span>
                   <span className="text-xs text-[#64748B] mt-0.5">
                     Hardware back-camera priority &bull; Automatic optimization
@@ -364,7 +364,7 @@ export default function ReportPage() {
                       href="/map"
                       className="px-3.5 py-1.5 bg-[#064E3B] text-white font-bold rounded-xl flex items-center gap-1.5 shadow-xs hover:bg-[#043327] transition-all"
                     >
-                      <span>View on Campus Map</span>
+                      <span>View Map</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
@@ -377,17 +377,17 @@ export default function ReportPage() {
           <button
             type="submit"
             disabled={isPending || isScanning}
-            className="w-full h-13 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-bold text-base rounded-2xl flex items-center justify-center gap-2.5 shadow-md active:scale-[0.99] transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full h-12 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-bold text-sm rounded-2xl flex items-center justify-center gap-2 shadow-md active:scale-[0.99] transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
             {isPending ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Verifying and Saving Report...</span>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Submitting...</span>
               </>
             ) : (
               <>
-                <UploadCloud className="w-5 h-5" />
-                <span>Submit Verified Campus Report</span>
+                <UploadCloud className="w-4 h-4" />
+                <span>Submit</span>
               </>
             )}
           </button>

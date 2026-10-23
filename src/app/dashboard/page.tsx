@@ -120,7 +120,7 @@ export default function DashboardPage() {
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
-                Live Campus Pilot
+                Live Pilot
               </button>
               <button
                 type="button"
@@ -131,7 +131,7 @@ export default function DashboardPage() {
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
-                Worked Example (12 kg)
+                Demo (12kg)
               </button>
             </div>
 
@@ -141,7 +141,7 @@ export default function DashboardPage() {
               className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#E2E8F0] hover:bg-[#F1F5F9] text-[#0F172A] rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
             >
               <Download className="w-4 h-4 text-[#30AFFF]" />
-              <span>Export Audit</span>
+              <span>Export</span>
             </button>
           </div>
         </div>

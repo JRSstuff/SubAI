@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Loader2, Navigation, Layers } from "lucide-react";
+import { Loader2, Navigation } from "lucide-react";
 
 export interface MapReportPin {
   id: string;
@@ -324,9 +324,9 @@ export function CampusMap({
       )}
 
       {/* Floating GPS Button */}
-      <div className="absolute bottom-4 right-4 z-10 flex flex-col items-end gap-2">
+      <div className="absolute bottom-3 right-3 z-10 flex flex-col items-end gap-1.5">
         {gpsError && (
-          <div className="px-3 py-1 bg-white border border-[#FCA5A5] text-[#DC2626] rounded-xl text-xs font-medium shadow-md">
+          <div className="px-2.5 py-1 bg-white border border-[#FCA5A5] text-[#DC2626] rounded-xl text-[11px] font-bold shadow-md">
             {gpsError}
           </div>
         )}
@@ -334,24 +334,16 @@ export function CampusMap({
           type="button"
           onClick={handleLocateMe}
           disabled={gpsLoading}
-          className="flex items-center gap-2 px-3.5 py-2.5 bg-white hover:bg-[#F8FAFC] text-[#0F172A] border border-[#E2E8F0] rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#F8FAFC] text-[#0F172A] border border-[#E2E8F0] rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all cursor-pointer"
         >
           {gpsLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin text-[#30AFFF]" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#30AFFF]" />
           ) : (
-            <Navigation className="w-4 h-4 text-[#30AFFF]" />
+            <Navigation className="w-3.5 h-3.5 text-[#30AFFF]" />
           )}
-          <span>{selectable ? "Use Current GPS" : "Recenter GPS"}</span>
+          <span>{gpsLoading ? "Locating..." : "Locate"}</span>
         </button>
       </div>
-
-      {/* Map Hint Pill */}
-      {selectable && (
-        <div className="absolute top-4 left-4 z-10 px-3 py-1.5 bg-white/90 backdrop-blur-xs border border-[#E2E8F0] rounded-xl text-xs font-semibold text-[#0F172A] shadow-sm flex items-center gap-2">
-          <Layers className="w-3.5 h-3.5 text-[#30AFFF]" />
-          <span>Click anywhere to drop obstruction pin</span>
-        </div>
-      )}
     </div>
   );
 }

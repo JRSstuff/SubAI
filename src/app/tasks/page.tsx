@@ -252,7 +252,7 @@ export default function TasksPage() {
                       onClick={() => openTaskModal(task)}
                       className="px-3.5 py-1.5 bg-[#30AFFF] hover:bg-[#1f9eef] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs"
                     >
-                      Log Evidence & Weigh
+                      Weigh
                     </button>
                   </div>
                 </div>
@@ -487,10 +487,10 @@ export default function TasksPage() {
                   {isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Saving Collection Batches...</span>
+                      <span>Saving...</span>
                     </>
                   ) : (
-                    <span>Commit Verified Collection & Handover</span>
+                    <span>Confirm</span>
                   )}
                 </button>
               </form>

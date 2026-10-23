@@ -87,6 +87,12 @@ We never build a mobile-only screen that stretches into a stretched mess on desk
 | **Information Density** | Focused single-column card flows; swipe-friendly tabs; bottom sheets for details. | Multi-column layouts: side-by-side split map & task lists, dense data tables with search/filter. |
 | **Actions** | Large prominent Floating Action Button (FAB) or sticky bottom CTA for primary action. | Header action bars, inline table action menus, and modal dialogs. |
 
+### 4.3 Microcopy & Action Button Discipline
+- **Ultra-Concise 1–3 Word Action Labels**: Button text must be direct, punchy, and minimal (prefer 1 word where possible). Never use verbose explanatory sentences inside action buttons.
+  - *Compliant*: `"Submit"`, `"Register"`, `"Login"`, `"Dispatch"`, `"Weigh"`, `"Locate"`, `"Export"`, `"Reset"`, `"View Map"`.
+  - *Prohibited*: `"Submit Verified Campus Report"`, `"Create Campus Account"`, `"Commit Triage & Dispatch Task"`, `"Log Evidence & Weigh"`.
+- **Zero Obtrusive Overlays on Map Surfaces**: Map viewports must remain clean and unobstructed. Never inject annoying floating tutorial pills, wordy instructions, or hint boxes (e.g. `"Click anywhere to drop obstruction pin"`) over the map canvas. Keep controls limited to compact single-word action triggers (e.g. `"Locate"`).
+
 ---
 
 ## 5. Camera & Media Capture Protocol (Rule 3)

@@ -277,10 +277,10 @@ export function AuthCard() {
                 {isPending || redirecting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{redirecting ? "Redirecting..." : "Creating account..."}</span>
+                    <span>{redirecting ? "Entering..." : "Registering..."}</span>
                   </>
                 ) : (
-                  <span>Create Campus Account</span>
+                  <span>Register</span>
                 )}
               </button>
             </form>
@@ -706,10 +706,10 @@ export function AuthCard() {
                   {isPending || redirecting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{redirecting ? "Redirecting..." : "Creating account..."}</span>
+                      <span>{redirecting ? "Entering..." : "Registering..."}</span>
                     </>
                   ) : (
-                    <span>Create Campus Account</span>
+                    <span>Register</span>
                   )}
                 </button>
               </motion.form>

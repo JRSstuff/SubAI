@@ -110,10 +110,10 @@ export default function RainBankPage() {
 
           <button
             onClick={handleReset}
-            className="self-start md:self-auto flex items-center gap-2 px-3.5 py-2 text-xs font-bold bg-white border border-[#CBD5E1] rounded-xl hover:bg-[#F1F5F9] transition-all text-[#475569]"
+            className="self-start md:self-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white border border-[#CBD5E1] rounded-xl hover:bg-[#F1F5F9] transition-all text-[#475569] cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            Reset Defaults
+            Reset
           </button>
         </div>
 
