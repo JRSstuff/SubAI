@@ -26,7 +26,6 @@ export async function handleLoginAction(formData: FormData): Promise<AuthRespons
     return {
       success: false,
       message: "Please enter your username or email.",
-      error: "Please enter your username or email.",
     };
   }
 
@@ -34,7 +33,6 @@ export async function handleLoginAction(formData: FormData): Promise<AuthRespons
     return {
       success: false,
       message: "Please enter your password.",
-      error: "Please enter your password.",
     };
   }
 
@@ -42,7 +40,6 @@ export async function handleLoginAction(formData: FormData): Promise<AuthRespons
     return {
       success: false,
       message: "Password must be at least 6 characters.",
-      error: "Password must be at least 6 characters.",
     };
   }
 
@@ -61,10 +58,21 @@ export async function handleLoginAction(formData: FormData): Promise<AuthRespons
     });
 
     if (error) {
+      if (error.message.toLowerCase().includes("invalid login credentials")) {
+        return {
+          success: false,
+          message: "Invalid email or password.",
+        };
+      }
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        return {
+          success: false,
+          message: "Email not yet confirmed. Please check your inbox or disable 'Confirm email' in Supabase.",
+        };
+      }
       return {
         success: false,
-        message: "Invalid email or password.",
-        error: "Invalid email or password.",
+        message: error.message,
       };
     }
 
@@ -82,11 +90,10 @@ export async function handleLoginAction(formData: FormData): Promise<AuthRespons
         role: role.toUpperCase(),
       },
     };
-  } catch {
+  } catch (err: unknown) {
     return {
       success: false,
-      message: "Unable to connect. Please try again.",
-      error: "Unable to connect. Please try again.",
+      message: err instanceof Error ? err.message : "Unable to connect. Please try again.",
     };
   }
 }
@@ -107,7 +114,6 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
     return {
       success: false,
       message: "Name must be at least 3 characters.",
-      error: "Name must be at least 3 characters.",
     };
   }
 
@@ -115,7 +121,6 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
     return {
       success: false,
       message: "Please enter a valid email address.",
-      error: "Please enter a valid email address.",
     };
   }
 
@@ -123,7 +128,6 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
     return {
       success: false,
       message: "Password must be at least 6 characters.",
-      error: "Password must be at least 6 characters.",
     };
   }
 
@@ -143,18 +147,27 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
     });
 
     if (error) {
+      // Handle Supabase free email rate limit specifically
+      if (
+        error.message.toLowerCase().includes("rate limit") ||
+        error.message.toLowerCase().includes("over_email_send_rate_limit")
+      ) {
+        return {
+          success: false,
+          message: "Email rate limit reached. Disable 'Confirm email' in Supabase Auth settings to test instantly.",
+        };
+      }
+
       return {
         success: false,
-        message: "Registration failed. Please check your details and try again.",
-        error: "Registration failed. Please check your details and try again.",
+        message: error.message,
       };
     }
 
     if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
       return {
         success: false,
-        message: "An account with this email already exists.",
-        error: "An account with this email already exists.",
+        message: "An account with this email already exists. Please sign in.",
       };
     }
 
@@ -173,11 +186,10 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
         role: role.toUpperCase(),
       },
     };
-  } catch {
+  } catch (err: unknown) {
     return {
       success: false,
-      message: "Registration failed. Please try again.",
-      error: "Registration failed. Please try again.",
+      message: err instanceof Error ? err.message : "Registration failed. Please try again.",
     };
   }
 }
