@@ -25,6 +25,7 @@ export default function Home() {
               src="/TubigLoopLogoWithText.png"
               alt="TubigLoop Brand"
               fill
+              sizes="144px"
               priority
               className="object-contain object-left"
             />
