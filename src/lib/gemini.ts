@@ -13,6 +13,10 @@ export interface AIScanResult {
 }
 
 const CANDIDATE_MODELS = [
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-latest",
+  "gemini-1.5-pro",
+  "gemini-pro-vision",
   "gemini-3.1-flash-lite",
   "gemini-flash-lite-latest",
   "gemini-3.8-flash",

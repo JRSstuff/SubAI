@@ -84,7 +84,7 @@ export default function RainBankPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24 md:pb-12 text-[#0F172A]">
+    <div className="min-h-screen bg-[#F8FAFC] pb-28 md:pb-12 text-[#0F172A] flex flex-col">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">

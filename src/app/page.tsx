@@ -1,22 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
-import { SplashScreen } from "@/components/auth/SplashScreen";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { Droplet, Recycle } from "lucide-react";
 
 export default function Home() {
-  const [hasLoaded, setHasLoaded] = useState(false);
-
   return (
     <main className="min-h-screen w-full flex flex-col justify-between bg-[#F8FAFC] text-[#0F172A] relative overflow-x-hidden">
-      {/* INITIAL SPLASH SCREEN (Shown during load) */}
-      {!hasLoaded && (
-        <SplashScreen onComplete={() => setHasLoaded(true)} minDuration={1100} />
-      )}
-
       {/* TOP BRAND BAR */}
       <header className="w-full border-b border-[#E2E8F0] bg-white py-3 px-4 sm:px-8 flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
@@ -41,18 +32,11 @@ export default function Home() {
         </div>
       </header>
 
-      {/* CENTRAL AUTHENTICATION STAGE */}
+      {/* CENTRAL AUTHENTICATION STAGE (Always rendered immediately - zero animation lock) */}
       <div className="flex-1 flex items-center justify-center py-6 sm:py-10 px-4">
-        {hasLoaded && (
-          <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="w-full flex items-center justify-center"
-          >
-            <AuthCard />
-          </motion.div>
-        )}
+        <div className="w-full flex items-center justify-center">
+          <AuthCard />
+        </div>
       </div>
 
       {/* BOTTOM AUDIT & COMPLIANCE FOOTER */}

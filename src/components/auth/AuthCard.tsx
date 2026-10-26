@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
   Mail,
@@ -16,8 +15,10 @@ import {
   Wrench,
   Megaphone,
   ClipboardCheck,
+  Sparkles,
+  ArrowRight,
+  Crown,
 } from "lucide-react";
-import { handleLoginAction, handleRegisterAction, type AuthResponse } from "@/app/actions/auth";
 
 const ROLES = [
   {
@@ -48,674 +49,403 @@ const ROLES = [
     icon: Recycle,
     activeColor: "bg-[#C4F7CA] text-[#064E3B] border-[#059669]",
   },
+  {
+    id: "admin",
+    title: "Campus Administrator",
+    desc: "Governance, RBAC & system audit",
+    icon: Crown,
+    activeColor: "bg-[#0F172A] text-white border-[#30AFFF]",
+  },
+];
+
+const DEMO_ACCOUNTS = [
+  { label: "Reporter", email: "reporter@tubigloop.edu", role: "reporter", target: "/report" },
+  { label: "Reviewer", email: "reviewer@tubigloop.edu", role: "reviewer", target: "/review" },
+  { label: "Collector", email: "collector@tubigloop.edu", role: "collector", target: "/tasks" },
+  { label: "Recycler", email: "recycler@tubigloop.edu", role: "recycler", target: "/dashboard" },
+  { label: "Admin", email: "admin@tubigloop.edu", role: "admin", target: "/admin" },
 ];
 
 export function AuthCard() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
   // Server response state
-  const [serverResponse, setServerResponse] = useState<AuthResponse | null>(null);
+  const [serverResponse, setServerResponse] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   // Form field states
-  const [loginUsername, setLoginUsername] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("reporter");
 
-  const [registerUsername, setRegisterUsername] = useState("");
-  const [registerEmail, setRegisterEmail] = useState("");
-  const [registerPassword, setRegisterPassword] = useState("");
-  const [registerRole, setRegisterRole] = useState("reporter");
+  // Clean any trailing /? from the address bar if previous native submission added it
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.search) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   const toggleMode = (newMode: "login" | "register") => {
     setServerResponse(null);
     setMode(newMode);
   };
 
-  const getDestination = (role?: string) => {
-    const r = (role || "").toLowerCase();
+  const getDestination = (userRole?: string) => {
+    const r = (userRole || "").toLowerCase();
+    if (r === "admin") return "/admin";
     if (r === "reviewer") return "/review";
     if (r === "collector") return "/tasks";
     if (r === "recycler") return "/dashboard";
     return "/report";
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const executeLogin = async (loginUser: string, loginPass: string) => {
+    setIsLoading(true);
     setServerResponse(null);
 
-    const formData = new FormData();
-    formData.append("username", loginUsername);
-    formData.append("password", loginPassword);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: loginUser, password: loginPass }),
+      });
 
-    startTransition(async () => {
-      try {
-        const res = await handleLoginAction(formData);
-        setServerResponse(res);
-        if (res.success) {
-          setRedirecting(true);
-          const target = getDestination(res.user?.role);
-          setTimeout(() => {
-            window.location.href = target;
-          }, 400);
-        }
-      } catch {
-        setServerResponse({
-          success: false,
-          message: "Unable to sign in. Please try again.",
-        });
+      const data = await res.json();
+      setServerResponse(data);
+
+      if (data.success) {
+        setRedirecting(true);
+        const destination = getDestination(data.user?.role);
+        // Instant client transition + hard fallback
+        router.push(destination);
+        setTimeout(() => {
+          window.location.assign(destination);
+        }, 150);
+      } else {
+        setIsLoading(false);
       }
-    });
+    } catch {
+      setIsLoading(false);
+      setServerResponse({
+        success: false,
+        message: "Unable to connect to login service. Please retry.",
+      });
+    }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleManualLogin = () => {
+    const cleanUsername = username.trim();
+    if (!cleanUsername) {
+      setServerResponse({ success: false, message: "Please enter your username or email." });
+      return;
+    }
+    if (!password) {
+      setServerResponse({ success: false, message: "Please enter your password." });
+      return;
+    }
+    executeLogin(cleanUsername, password);
+  };
+
+  const handleQuickLogin = (demoEmail: string) => {
+    setUsername(demoEmail);
+    setPassword("tubigloop123");
+    executeLogin(demoEmail, "tubigloop123");
+  };
+
+  const handleRegisterSubmit = async () => {
     setServerResponse(null);
 
-    const formData = new FormData();
-    formData.append("username", registerUsername);
-    formData.append("email", registerEmail);
-    formData.append("password", registerPassword);
-    formData.append("role", registerRole);
+    const cleanName = username.trim();
+    const cleanEmail = email.trim();
 
-    startTransition(async () => {
-      try {
-        const res = await handleRegisterAction(formData);
-        setServerResponse(res);
-        if (res.success) {
-          setRedirecting(true);
-          const target = getDestination(res.user?.role || registerRole);
-          setTimeout(() => {
-            window.location.href = target;
-          }, 400);
-        }
-      } catch {
-        setServerResponse({
-          success: false,
-          message: "Unable to create account. Please try again.",
-        });
+    if (!cleanName || cleanName.length < 3) {
+      setServerResponse({ success: false, message: "Name must be at least 3 characters." });
+      return;
+    }
+    if (!cleanEmail || !cleanEmail.includes("@") || !cleanEmail.includes(".")) {
+      setServerResponse({ success: false, message: "Please enter a valid campus email." });
+      return;
+    }
+    if (!password || password.length < 6) {
+      setServerResponse({ success: false, message: "Password must be at least 6 characters." });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: cleanName,
+          email: cleanEmail,
+          password: password,
+          role: role,
+        }),
+      });
+
+      const data = await res.json();
+      setServerResponse(data);
+
+      if (data.success) {
+        setRedirecting(true);
+        const destination = getDestination(data.user?.role || role);
+        router.push(destination);
+        setTimeout(() => {
+          window.location.assign(destination);
+        }, 150);
+      } else {
+        setIsLoading(false);
       }
-    });
+    } catch {
+      setIsLoading(false);
+      setServerResponse({
+        success: false,
+        message: "Unable to complete registration. Please retry.",
+      });
+    }
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto flex flex-col items-center justify-center p-2 sm:p-4 select-none">
-      {/* ─────────────────────────────────────────────────────────────
-          DESKTOP & TABLET VIEW: Sliding Dual-Panel Container (md:flex)
-          ───────────────────────────────────────────────────────────── */}
-      <div className="hidden md:flex relative w-[920px] min-h-[640px] bg-white rounded-[36px] border border-[#E2E8F0] shadow-xl overflow-hidden">
-        {/* UNDERLYING LEFT PANEL: Registration Form */}
-        <div className="w-1/2 p-8 flex flex-col justify-center bg-white z-0 overflow-y-auto">
-          <div className="w-full max-w-[360px] mx-auto flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <h2 className="text-2xl font-bold tracking-tight text-[#0F172A]">Campus Registration</h2>
-              <p className="text-xs text-[#64748B] font-medium">
-                Choose your role in the TubigLoop campus pilot
-              </p>
-            </div>
-
-            {/* 4 Grand Plan Role Selector Cards */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-[#475569] uppercase tracking-wider">
-                Authorized Role
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {ROLES.map((r) => {
-                  const Icon = r.icon;
-                  const isSelected = registerRole === r.id;
-                  return (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => setRegisterRole(r.id)}
-                      className={`flex flex-col items-start p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${
-                        isSelected
-                          ? `${r.activeColor} shadow-xs ring-1 ring-[#30AFFF]/40`
-                          : "bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0] hover:bg-[#F1F5F9]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5 w-full">
-                        <Icon className="w-4 h-4 shrink-0" />
-                        <span className="text-xs font-bold truncate">{r.title}</span>
-                      </div>
-                      <span className="text-[10px] opacity-80 mt-1 leading-tight line-clamp-1">
-                        {r.desc}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-3">
-              {/* Full Name */}
-              <div className="relative flex items-center">
-                <input
-                  type="text"
-                  placeholder="Full Name / Student ID"
-                  value={registerUsername}
-                  onChange={(e) => setRegisterUsername(e.target.value)}
-                  disabled={isPending || redirecting}
-                  className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
-                  required
-                />
-                <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
-                  <User className="w-4 h-4" />
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className="relative flex items-center">
-                <input
-                  type="email"
-                  placeholder="Campus Email"
-                  value={registerEmail}
-                  onChange={(e) => setRegisterEmail(e.target.value)}
-                  disabled={isPending || redirecting}
-                  className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
-                  required
-                />
-                <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
-                  <Mail className="w-4 h-4" />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div className="relative flex items-center">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password (minimum 6 characters)"
-                  value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
-                  disabled={isPending || redirecting}
-                  className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 text-[#64748B] hover:text-[#0F172A] transition-colors cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-
-              {/* Status Banner */}
-              {serverResponse && mode === "register" && (
-                <div
-                  className={`p-3 rounded-xl border flex items-center justify-between gap-2.5 text-xs font-semibold transition-all ${
-                    serverResponse.success
-                      ? "bg-[#C4F7CA] text-[#064E3B] border-[#86EFAC]"
-                      : "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {serverResponse.success ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
-                    )}
-                    <span>{serverResponse.message}</span>
-                  </div>
-                  {serverResponse.success && (
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#064E3B]">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#059669]" />
-                      <span>Entering...</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isPending || redirecting}
-                className="w-full h-11 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-              >
-                {isPending || redirecting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{redirecting ? "Entering..." : "Registering..."}</span>
-                  </>
-                ) : (
-                  <span>Register</span>
-                )}
-              </button>
-            </form>
-          </div>
+    <div className="w-full max-w-md sm:max-w-lg mx-auto bg-white rounded-3xl border border-[#E2E8F0] shadow-xl overflow-hidden select-none">
+      {/* ─── HEADER: Curved Brand Card Top (Matching Reference Images) ─── */}
+      <div className="bg-[#30AFFF] p-6 text-white text-center flex flex-col items-center rounded-b-[36px] shadow-sm">
+        <div className="relative w-44 h-16 drop-shadow-sm mb-1">
+          <Image
+            src="/TubigLoopLogoWithText.png"
+            alt="TubigLoop Logo"
+            fill
+            sizes="176px"
+            priority
+            className="object-contain"
+          />
         </div>
+        <p className="text-xs text-white/95 font-medium">
+          Campus Drainage & Circular Recovery Terminal
+        </p>
 
-        {/* UNDERLYING RIGHT PANEL: Login Form */}
-        <div className="w-1/2 p-10 flex flex-col justify-center bg-white z-0">
-          <div className="w-full max-w-[340px] mx-auto flex flex-col gap-5">
-            <div className="flex flex-col gap-1">
-              <h2 className="text-3xl font-bold tracking-tight text-[#0F172A]">Login</h2>
-              <p className="text-xs text-[#64748B] font-medium">
-                Enter your credentials to access the CDO pilot terminal
-              </p>
-            </div>
-
-            <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
-              {/* Username Input Box */}
-              <div className="relative flex items-center">
-                <input
-                  type="text"
-                  placeholder="Email or Username"
-                  value={loginUsername}
-                  onChange={(e) => setLoginUsername(e.target.value)}
-                  disabled={isPending || redirecting}
-                  className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
-                  required
-                />
-                <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
-                  <User className="w-5 h-5" />
-                </div>
-              </div>
-
-              {/* Password Input Box */}
-              <div className="relative flex items-center">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  disabled={isPending || redirecting}
-                  className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 text-[#64748B] hover:text-[#0F172A] transition-colors cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-
-              {/* Status Banner */}
-              {serverResponse && mode === "login" && (
-                <div
-                  className={`p-3 rounded-xl border flex items-center justify-between gap-2.5 text-xs font-semibold transition-all ${
-                    serverResponse.success
-                      ? "bg-[#C4F7CA] text-[#064E3B] border-[#86EFAC]"
-                      : "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {serverResponse.success ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
-                    )}
-                    <span>{serverResponse.message}</span>
-                  </div>
-                  {serverResponse.success && (
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#064E3B]">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#059669]" />
-                      <span>Entering...</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isPending || redirecting}
-                className="w-full h-12 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-              >
-                {isPending || redirecting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{redirecting ? "Redirecting..." : "Signing in..."}</span>
-                  </>
-                ) : (
-                  <span>Login</span>
-                )}
-              </button>
-            </form>
-          </div>
+        {/* Segmented Switcher Pill */}
+        <div className="mt-4 inline-flex p-1 bg-black/15 rounded-2xl text-xs font-bold">
+          <button
+            type="button"
+            onClick={() => toggleMode("login")}
+            className={`px-6 py-2 rounded-xl transition-all cursor-pointer min-h-[38px] ${
+              mode === "login"
+                ? "bg-white text-[#30AFFF] shadow-sm"
+                : "text-white hover:text-white/80"
+            }`}
+          >
+            Login
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleMode("register")}
+            className={`px-6 py-2 rounded-xl transition-all cursor-pointer min-h-[38px] ${
+              mode === "register"
+                ? "bg-white text-[#30AFFF] shadow-sm"
+                : "text-white hover:text-white/80"
+            }`}
+          >
+            Register
+          </button>
         </div>
-
-        {/* ─────────────────────────────────────────────────────────────
-            THE CURVED SLIDING OVERLAY PANEL
-            ───────────────────────────────────────────────────────────── */}
-        <motion.div
-          initial={false}
-          animate={{
-            x: mode === "login" ? 0 : "100%",
-            borderTopLeftRadius: mode === "login" ? "36px" : "140px",
-            borderBottomLeftRadius: mode === "login" ? "36px" : "140px",
-            borderTopRightRadius: mode === "login" ? "140px" : "36px",
-            borderBottomRightRadius: mode === "login" ? "140px" : "36px",
-          }}
-          transition={{
-            type: "spring",
-            stiffness: 240,
-            damping: 28,
-          }}
-          className="absolute top-0 left-0 w-1/2 h-full bg-[#30AFFF] z-20 flex flex-col items-center justify-center text-white px-10 text-center shadow-2xl pointer-events-auto"
-        >
-          <div className="relative w-44 h-24 mb-3 drop-shadow-md">
-            <Image
-              src="/TubigLoopLogoWithText.png"
-              alt="TubigLoop Logo"
-              fill
-              sizes="176px"
-              priority
-              className="object-contain"
-            />
-          </div>
-
-          <AnimatePresence mode="wait">
-            {mode === "login" ? (
-              <motion.div
-                key="overlay-login-msg"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.25 }}
-                className="flex flex-col items-center gap-3"
-              >
-                <h3 className="text-2xl font-black tracking-tight text-white">Hello, Student!</h3>
-                <p className="text-xs text-white/90 leading-relaxed max-w-[280px]">
-                  Register your account to report campus drainage blocks and track recovery operations.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => toggleMode("register")}
-                  className="mt-3 px-8 py-2.5 border-2 border-white text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-white hover:text-[#30AFFF] transition-all cursor-pointer shadow-sm active:scale-95"
-                >
-                  Register
-                </button>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="overlay-register-msg"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.25 }}
-                className="flex flex-col items-center gap-3"
-              >
-                <h3 className="text-2xl font-black tracking-tight text-white">Welcome Back!</h3>
-                <p className="text-xs text-white/90 leading-relaxed max-w-[280px]">
-                  Already have an authorized campus role? Sign in to access your dispatch queue and task terminal.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => toggleMode("login")}
-                  className="mt-3 px-8 py-2.5 border-2 border-white text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-white hover:text-[#30AFFF] transition-all cursor-pointer shadow-sm active:scale-95"
-                >
-                  Login
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          MOBILE VIEW: Segmented Switcher & Touch-Optimized Cards (< md)
-          ───────────────────────────────────────────────────────────── */}
-      <div className="md:hidden w-full max-w-md bg-white rounded-3xl border border-[#E2E8F0] shadow-lg overflow-hidden">
-        {/* Mobile Curved Top Header */}
-        <div className="bg-[#30AFFF] p-6 text-white text-center flex flex-col items-center rounded-b-[36px] shadow-sm">
-          <div className="relative w-40 h-16 drop-shadow-sm mb-1">
-            <Image
-              src="/TubigLoopLogoWithText.png"
-              alt="TubigLoop Logo"
-              fill
-              sizes="160px"
-              priority
-              className="object-contain"
+      {/* ─── BODY: Pure Client Container (NO <form> TAG - Immune to Mobile GET /? Navigation) ─── */}
+      <div className="p-5 sm:p-7 flex flex-col gap-3.5">
+        {/* Quick Pilot 1-Tap Entry (When in Login Mode) */}
+        {mode === "login" && (
+          <div className="flex flex-col gap-2 pb-1 bg-[#F8FAFC] p-3 rounded-2xl border border-[#E2E8F0]">
+            <span className="text-[11px] font-bold text-[#475569] flex items-center justify-between uppercase tracking-wider">
+              <span className="flex items-center gap-1 text-[#0F172A]">
+                <Sparkles className="w-3.5 h-3.5 text-[#30AFFF]" />
+                1-Tap Quick Pilot Login:
+              </span>
+              <span className="text-[10px] text-[#64748B] lowercase font-medium">instant test</span>
+            </span>
+
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+              {DEMO_ACCOUNTS.map((acc) => (
+                <button
+                  key={acc.role}
+                  type="button"
+                  onClick={() => handleQuickLogin(acc.email)}
+                  disabled={isLoading || redirecting}
+                  className="py-2 px-2.5 bg-white hover:bg-[#92EEFF]/30 active:bg-[#92EEFF] border border-[#CBD5E1] hover:border-[#30AFFF] rounded-xl text-xs font-bold text-[#0F172A] transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 shadow-2xs min-h-[46px]"
+                >
+                  <span className="text-[#30AFFF] font-extrabold">{acc.label}</span>
+                  <span className="text-[9px] text-[#64748B] font-medium truncate w-full text-center">
+                    {acc.target}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Role Selection (When in Register Mode) */}
+        {mode === "register" && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-bold text-[#475569] uppercase tracking-wider">
+              Authorized Campus Role
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {ROLES.map((r) => {
+                const Icon = r.icon;
+                const isSelected = role === r.id;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setRole(r.id)}
+                    className={`flex items-center gap-2 p-2.5 rounded-2xl border text-left transition-all cursor-pointer min-h-[44px] ${
+                      isSelected
+                        ? `${r.activeColor} shadow-xs ring-2 ring-[#30AFFF]`
+                        : "bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0] hover:bg-[#F1F5F9]"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span className="text-xs font-bold truncate">{r.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Username / Full Name Input */}
+        <div className="relative flex items-center">
+          <input
+            type="text"
+            id="auth-username"
+            autoComplete="username"
+            placeholder={mode === "login" ? "Email or Username" : "Full Name / Student ID"}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (mode === "login") handleManualLogin();
+                else handleRegisterSubmit();
+              }
+            }}
+            disabled={isLoading || redirecting}
+            className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-2xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
+          />
+          <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
+            <User className="w-5 h-5" />
+          </div>
+        </div>
+
+        {/* Email Input (Only in Register Mode) */}
+        {mode === "register" && (
+          <div className="relative flex items-center">
+            <input
+              type="email"
+              id="auth-email"
+              autoComplete="email"
+              placeholder="Campus Email (@ustp.edu.ph)"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleRegisterSubmit();
+                }
+              }}
+              disabled={isLoading || redirecting}
+              className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-2xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
             />
+            <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
+              <Mail className="w-5 h-5" />
+            </div>
           </div>
-          <p className="text-xs text-white/90 font-medium">
-            Campus Drainage & Material Recovery Terminal
-          </p>
+        )}
 
-          {/* Segmented Switcher Pill */}
-          <div className="mt-4 inline-flex p-1 bg-black/15 rounded-xl text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => toggleMode("login")}
-              className={`px-5 py-1.5 rounded-lg transition-all ${
-                mode === "login"
-                  ? "bg-white text-[#30AFFF] shadow-sm"
-                  : "text-white hover:text-white/80"
-              }`}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              onClick={() => toggleMode("register")}
-              className={`px-5 py-1.5 rounded-lg transition-all ${
-                mode === "register"
-                  ? "bg-white text-[#30AFFF] shadow-sm"
-                  : "text-white hover:text-white/80"
-              }`}
-            >
-              Register
-            </button>
-          </div>
+        {/* Password Input */}
+        <div className="relative flex items-center">
+          <input
+            type={showPassword ? "text" : "password"}
+            id="auth-password"
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            placeholder={mode === "login" ? "Password" : "Password (min 6 characters)"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (mode === "login") handleManualLogin();
+                else handleRegisterSubmit();
+              }
+            }}
+            disabled={isLoading || redirecting}
+            className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-2xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3.5 text-[#64748B] hover:text-[#0F172A] p-1 cursor-pointer"
+          >
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
         </div>
 
-        {/* Mobile Form Body */}
-        <div className="p-5">
-          <AnimatePresence mode="wait">
-            {mode === "login" ? (
-              <motion.form
-                key="mobile-login"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.2 }}
-                onSubmit={handleLoginSubmit}
-                className="flex flex-col gap-3.5"
-              >
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    placeholder="Email or Username"
-                    value={loginUsername}
-                    onChange={(e) => setLoginUsername(e.target.value)}
-                    disabled={isPending || redirecting}
-                    className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
-                    required
-                  />
-                  <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
-                    <User className="w-5 h-5" />
-                  </div>
-                </div>
-
-                <div className="relative flex items-center">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    disabled={isPending || redirecting}
-                    className="w-full h-12 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 text-[#64748B] p-1 cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-
-                {serverResponse && (
-                  <div
-                    className={`p-3 rounded-xl border flex items-center justify-between gap-2.5 text-xs font-semibold transition-all ${
-                      serverResponse.success
-                        ? "bg-[#C4F7CA] text-[#064E3B] border-[#86EFAC]"
-                        : "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {serverResponse.success ? (
-                        <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
-                      )}
-                      <span>{serverResponse.message}</span>
-                    </div>
-                    {serverResponse.success && (
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#064E3B]">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#059669]" />
-                        <span>Entering...</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isPending || redirecting}
-                  className="w-full h-12 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-all disabled:opacity-60 cursor-pointer"
-                >
-                  {isPending || redirecting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{redirecting ? "Redirecting..." : "Signing in..."}</span>
-                    </>
-                  ) : (
-                    <span>Login</span>
-                  )}
-                </button>
-              </motion.form>
-            ) : (
-              <motion.form
-                key="mobile-register"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.2 }}
-                onSubmit={handleRegisterSubmit}
-                className="flex flex-col gap-3"
-              >
-                {/* 4 Grand Plan Roles for Mobile */}
-                <div className="grid grid-cols-2 gap-1.5">
-                  {ROLES.map((r) => {
-                    const Icon = r.icon;
-                    const isSelected = registerRole === r.id;
-                    return (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => setRegisterRole(r.id)}
-                        className={`flex items-center gap-1.5 p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                          isSelected
-                            ? r.activeColor
-                            : "bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0]"
-                        }`}
-                      >
-                        <Icon className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{r.title}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    placeholder="Full Name / ID"
-                    value={registerUsername}
-                    onChange={(e) => setRegisterUsername(e.target.value)}
-                    disabled={isPending || redirecting}
-                    className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
-                    required
-                  />
-                  <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
-                    <User className="w-4 h-4" />
-                  </div>
-                </div>
-
-                <div className="relative flex items-center">
-                  <input
-                    type="email"
-                    placeholder="Official Email"
-                    value={registerEmail}
-                    onChange={(e) => setRegisterEmail(e.target.value)}
-                    disabled={isPending || redirecting}
-                    className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
-                    required
-                  />
-                  <div className="absolute right-3.5 text-[#64748B] pointer-events-none">
-                    <Mail className="w-4 h-4" />
-                  </div>
-                </div>
-
-                <div className="relative flex items-center">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password (6+ chars)"
-                    value={registerPassword}
-                    onChange={(e) => setRegisterPassword(e.target.value)}
-                    disabled={isPending || redirecting}
-                    className="w-full h-11 pl-4 pr-11 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#30AFFF] focus:ring-2 focus:ring-[#92EEFF]/60 focus:outline-none transition-all disabled:opacity-50"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 text-[#64748B] p-1 cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-
-                {serverResponse && (
-                  <div
-                    className={`p-3 rounded-xl border flex items-center justify-between gap-2.5 text-xs font-semibold transition-all ${
-                      serverResponse.success
-                        ? "bg-[#C4F7CA] text-[#064E3B] border-[#86EFAC]"
-                        : "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {serverResponse.success ? (
-                        <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
-                      )}
-                      <span>{serverResponse.message}</span>
-                    </div>
-                    {serverResponse.success && (
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#064E3B]">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#059669]" />
-                        <span>Entering...</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isPending || redirecting}
-                  className="w-full h-12 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-all disabled:opacity-60 cursor-pointer"
-                >
-                  {isPending || redirecting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{redirecting ? "Entering..." : "Registering..."}</span>
-                    </>
-                  ) : (
-                    <span>Register</span>
-                  )}
-                </button>
-              </motion.form>
+        {/* Server Verified Status Banner (Rule 1: Real Authoritative OK) */}
+        {serverResponse && (
+          <div
+            className={`p-3.5 rounded-2xl border flex items-center justify-between gap-2.5 text-xs font-bold transition-all ${
+              serverResponse.success
+                ? "bg-[#C4F7CA] text-[#064E3B] border-[#86EFAC]"
+                : "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {serverResponse.success ? (
+                <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
+              )}
+              <span>{serverResponse.message}</span>
+            </div>
+            {serverResponse.success && (
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#064E3B]">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#059669]" />
+                <span>Entering...</span>
+              </div>
             )}
-          </AnimatePresence>
-        </div>
+          </div>
+        )}
+
+        {/* Action Button */}
+        <button
+          type="button"
+          onClick={() => {
+            if (mode === "login") handleManualLogin();
+            else handleRegisterSubmit();
+          }}
+          disabled={isLoading || redirecting}
+          className="w-full h-12 bg-[#30AFFF] hover:bg-[#1f9eef] active:scale-[0.99] text-white font-bold text-sm rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-60 cursor-pointer min-h-[48px]"
+        >
+          {isLoading || redirecting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>{redirecting ? "Entering..." : mode === "login" ? "Signing in..." : "Registering..."}</span>
+            </>
+          ) : (
+            <>
+              <span>{mode === "login" ? "Login" : "Register"}</span>
+              <ArrowRight className="w-4 h-4" />
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
