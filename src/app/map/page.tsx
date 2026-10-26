@@ -91,10 +91,10 @@ export default function MapPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex flex-col gap-1">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0F172A]">
-              Campus Drainage Map
+              CDO Drainage Map
             </h1>
             <p className="text-xs sm:text-sm text-[#475569]">
-              Visualizing active drainage blockages across USTP CDO campus grounds.
+              Visualizing active drainage blockages across Cagayan de Oro City.
             </p>
           </div>
 

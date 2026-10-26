@@ -12,20 +12,18 @@ export interface AIScanResult {
   error?: string;
 }
 
+// Ordered strictly by response speed & active availability in Google AI Studio
 const CANDIDATE_MODELS = [
-  "gemini-1.5-flash",
-  "gemini-1.5-flash-latest",
-  "gemini-1.5-pro",
-  "gemini-pro-vision",
-  "gemini-3.1-flash-lite",
+  "gemini-3.5-flash-lite",
   "gemini-flash-lite-latest",
+  "gemini-3.1-flash-lite",
   "gemini-3.8-flash",
   "gemini-flash-latest",
 ];
 
 /**
- * Server Action: Multimodal vision scan of drainage obstruction photos.
- * Uses Google Gemini AI Studio with automated model cascade fallback.
+ * Server Action: Multimodal ultra-fast vision scan of drainage obstruction photos.
+ * Uses high-speed Gemini Flash Lite models with automated fast-cascade fallback.
  */
 export async function analyzeObstructionPhoto(base64Image: string): Promise<AIScanResult> {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -37,7 +35,7 @@ export async function analyzeObstructionPhoto(base64Image: string): Promise<AISc
       obstructionSeverity: "low",
       suggestedDescription: "AI analysis unavailable (GEMINI_API_KEY not configured).",
       recommendedAction: "needs_inspection",
-      confidenceNotes: "Manual classification required.",
+      confidenceNotes: "Pending review.",
       isUnclear: true,
       error: "GEMINI_API_KEY environment variable is missing.",
     };
@@ -66,23 +64,23 @@ export async function analyzeObstructionPhoto(base64Image: string): Promise<AISc
   }
 
   const prompt = `
-You are TubigLoop CDO AI Vision Assistant for campus drainage and circular material recovery.
-Analyze this photo of a campus drainage, canal, catch basin, or collected waste.
+You are TubigLoop CDO AI Vision Assistant for Cagayan de Oro drainage maintenance and circular waste recovery.
+Analyze this photo of a drainage canal, culvert, inlet, catch basin, curb opening, or creek in Cagayan de Oro.
 
-Return ONLY a valid JSON object with the following schema:
+Return ONLY a valid JSON object matching this schema:
 {
   "detectedCategories": ["pet_bottles" | "flexible_packaging" | "residual_waste" | "silt" | "organic_debris"],
   "obstructionSeverity": "low" | "partial" | "substantial",
-  "suggestedDescription": "A factual, 1-2 sentence description of visible obstructions and water flow conditions",
+  "suggestedDescription": "Factual 1-sentence description of visible debris, water flow, or blockage",
   "recommendedAction": "verified" | "needs_inspection",
-  "confidenceNotes": "Brief notes on image clarity, lighting, or visible obstacles",
+  "confidenceNotes": "Brief notes on clarity or materials observed",
   "isUnclear": false
 }
 
 Rules:
-1. Do not invent exact mass in kilograms (weights are physically measured by scale).
-2. If image is blurry, obscured, or lacks clear drainage context, set "isUnclear": true and "recommendedAction": "needs_inspection".
-3. Return raw JSON without markdown code fences.
+1. Do not invent exact mass in kilograms.
+2. If image is blurry or unclear, set "isUnclear": true and "recommendedAction": "needs_inspection".
+3. Return raw JSON without markdown code blocks.
 `;
 
   for (const model of CANDIDATE_MODELS) {
@@ -110,13 +108,15 @@ Rules:
           ],
           generationConfig: {
             temperature: 0.1,
-            maxOutputTokens: 500,
+            maxOutputTokens: 250,
+            responseMimeType: "application/json",
           },
         }),
+        signal: AbortSignal.timeout(6000),
       });
 
       if (!res.ok) {
-        // Try next candidate model
+        // Try next candidate model immediately
         continue;
       }
 
@@ -140,27 +140,27 @@ Rules:
           : ["residual_waste"],
         obstructionSeverity: parsed.obstructionSeverity || "partial",
         suggestedDescription:
-          parsed.suggestedDescription || "Obstruction reported at campus drain.",
+          parsed.suggestedDescription || "Drainage blockage reported in Cagayan de Oro.",
         recommendedAction: parsed.recommendedAction || "verified",
         confidenceNotes:
-          parsed.confidenceNotes || "Analyzed via Gemini Vision.",
+          parsed.confidenceNotes || "Analyzed via TubigLoop Vision AI.",
         isUnclear: Boolean(parsed.isUnclear),
       };
     } catch {
-      // Continue to next model on network/parse error
+      // Fast fallback to next model
       continue;
     }
   }
 
-  // Graceful fallback if all AI models fail or quota is reached
+  // Graceful fallback if all AI models fail or network times out
   return {
     success: false,
     detectedCategories: ["residual_waste"],
     obstructionSeverity: "partial",
-    suggestedDescription: "Drainage blockage observed. Manual review recommended.",
+    suggestedDescription: "Drainage blockage observed.",
     recommendedAction: "needs_inspection",
-    confidenceNotes: "AI assistance temporarily unavailable; manual review enabled.",
+    confidenceNotes: "Pending review.",
     isUnclear: true,
-    error: "AI service temporarily unavailable.",
+    error: "AI service unavailable.",
   };
 }

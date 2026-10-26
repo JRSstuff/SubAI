@@ -67,7 +67,7 @@ export default function DashboardPage() {
         JSON.stringify(
           {
             project: "TubigLoop CDO",
-            campus: "USTP Cagayan de Oro",
+            jurisdiction: "Cagayan de Oro City",
             exportedAt: new Date().toISOString(),
             datasetType: isDemoMode ? "demo_worked_example" : "live_pilot",
             massBalanceMetrics: displayMetrics,

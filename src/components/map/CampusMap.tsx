@@ -45,7 +45,7 @@ export function CampusMap({
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
 
-  // Default campus center: USTP Cagayan de Oro Campus
+  // Default center: Cagayan de Oro City (Central C.M. Recto / Bitan-ag corridor)
   const defaultCenter = { lat: 8.4858, lng: 124.6565 };
 
   useEffect(() => {
@@ -90,7 +90,7 @@ export function CampusMap({
       try {
         localMap = L.map(mapContainerRef.current, {
           center: [initialCenter.lat, initialCenter.lng],
-          zoom: 17,
+          zoom: 16,
           zoomControl: false,
         });
       } catch (err) {
@@ -130,12 +130,32 @@ export function CampusMap({
       }
 
       setIsLoading(false);
+
+      setTimeout(() => {
+        if (localMap) {
+          localMap.invalidateSize();
+        }
+      }, 100);
     }
 
     initMap();
 
+    // Automatically recalculate map dimensions if container resizes (e.g. fullscreen)
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined" && mapContainerRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      });
+      resizeObserver.observe(mapContainerRef.current);
+    }
+
     return () => {
       isMounted = false;
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       if (localMap) {
         try {
           localMap.remove();

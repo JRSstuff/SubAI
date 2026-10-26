@@ -17,9 +17,11 @@ export async function submitReportAction(formData: FormData): Promise<ActionResu
   const locationName = formData.get("locationName")?.toString().trim();
   const latitude = Number(formData.get("latitude"));
   const longitude = Number(formData.get("longitude"));
-  const description = formData.get("description")?.toString().trim();
+  const classification = formData.get("classification")?.toString().trim();
+  const rawDescription = formData.get("description")?.toString().trim() || "";
+  const description = classification ? `[${classification}] ${rawDescription}` : rawDescription;
   const photoBase64 = formData.get("photoBase64")?.toString();
-  const reporterName = formData.get("reporterName")?.toString().trim() || "Campus Reporter";
+  const reporterName = formData.get("reporterName")?.toString().trim() || "CDO Reporter";
   const aiCategoriesJson = formData.get("aiCategories")?.toString() || "[]";
 
   if (!locationName) {
@@ -100,15 +102,20 @@ export async function submitReportAction(formData: FormData): Promise<ActionResu
       };
     }
 
+    const severity = formData.get("severity")?.toString() || "partial";
+    const obstructionScore = severity === "substantial" ? 3 : severity === "partial" ? 2 : 1;
+    const priorityBand = severity === "substantial" ? "High" : severity === "partial" ? "Medium" : "Low";
+    const priorityScore = severity === "substantial" ? 4 : severity === "partial" ? 2 : 1;
+
     // Auto-create initial planned cleanup task
     await supabase.from("cleanup_tasks").insert({
       report_id: newReport.id,
       state: "Planned",
-      priority_score: 2,
-      priority_band: "Medium",
-      obstruction_score: 1,
+      priority_score: priorityScore,
+      priority_band: priorityBand,
+      obstruction_score: obstructionScore,
       disruption_score: 1,
-      priority_reason: "Initial submission pending reviewer triage.",
+      priority_reason: `Initial submission (${severity}${classification ? ` - ${classification}` : ""}) pending triage.`,
     });
 
     // Record AI analysis if provided
