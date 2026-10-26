@@ -156,7 +156,7 @@ export async function getReportsAction(): Promise<ActionResult> {
 
     const { data, error } = await supabase
       .from("reports")
-      .select("*, cleanup_tasks(*)")
+      .select("*, cleanup_tasks(*), ai_analyses(*)")
       .order("created_at", { ascending: false });
 
     if (error) {
