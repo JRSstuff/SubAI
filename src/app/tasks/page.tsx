@@ -336,7 +336,7 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-28 md:pb-16 text-[#0F172A] flex flex-col font-sans">
+    <div className="min-h-screen bg-transparent pb-28 md:pb-16 text-[#0F172A] flex flex-col font-sans">
       <Navbar />
 
       <main className="max-w-6xl w-full mx-auto px-4 py-5 sm:py-8 flex flex-col gap-6">

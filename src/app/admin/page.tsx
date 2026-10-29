@@ -202,7 +202,7 @@ export default function AdminPage() {
   const adminCount = users.filter((u) => u.role === "admin").length;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-28 md:pb-12 text-[#0F172A] flex flex-col">
+    <div className="min-h-screen bg-transparent pb-28 md:pb-12 text-[#0F172A] flex flex-col">
       <Navbar />
 
       <main className="max-w-5xl w-full mx-auto px-4 py-5 sm:py-8 flex flex-col gap-5">

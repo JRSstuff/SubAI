@@ -536,6 +536,32 @@ export function AuthCard() {
             <span>Authorized Operations Terminal</span>
           </div>
 
+          {/* Animated Liquid Multi-Layer Water Surface at bottom of Blue Card */}
+          <div className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden pointer-events-none">
+            {/* Wave 1: Aqua Tint Under-Current */}
+            <svg
+              className="absolute bottom-0 left-0 w-[200%] h-full opacity-60 animate-water-wave-reverse"
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0,40 C150,10 350,70 500,30 C650,-10 850,70 1000,30 C1100,0 1180,40 1200,40 L1200,120 L0,120 Z"
+                fill="#92EEFF"
+              />
+            </svg>
+            {/* Wave 2: Sparkling Crest Surface Wave */}
+            <svg
+              className="absolute bottom-0 left-0 w-[200%] h-full opacity-75 animate-water-wave"
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0,50 C180,90 320,10 520,60 C680,100 860,20 1020,60 C1120,90 1180,50 1200,50 L1200,120 L0,120 Z"
+                fill="#ffffff"
+              />
+            </svg>
+          </div>
+
           <AnimatePresence mode="wait">
             {mode === "login" ? (
               /* Content shown when overlay is on the LEFT (prompting to Register) */
@@ -548,13 +574,14 @@ export function AuthCard() {
                 className="flex flex-col items-center text-center gap-5 max-w-[300px]"
               >
                 <div className="relative w-24 h-24 bg-white rounded-3xl p-3 shadow-md flex items-center justify-center border border-white/40">
+                  <div className="absolute -inset-1 rounded-3xl border-2 border-white/60 animate-ping opacity-60 pointer-events-none" />
                   <Image
                     src="/logo512x512.png"
                     alt="SubAI Logo"
                     width={80}
                     height={80}
                     priority
-                    className="object-contain"
+                    className="object-contain relative z-10"
                   />
                 </div>
 
@@ -586,13 +613,14 @@ export function AuthCard() {
                 className="flex flex-col items-center text-center gap-5 max-w-[300px]"
               >
                 <div className="relative w-24 h-24 bg-white rounded-3xl p-3 shadow-md flex items-center justify-center border border-white/40">
+                  <div className="absolute -inset-1 rounded-3xl border-2 border-white/60 animate-ping opacity-60 pointer-events-none" />
                   <Image
                     src="/logo512x512.png"
                     alt="SubAI Logo"
                     width={80}
                     height={80}
                     priority
-                    className="object-contain"
+                    className="object-contain relative z-10"
                   />
                 </div>
 
@@ -623,8 +651,33 @@ export function AuthCard() {
           Curved top brand header + responsive centered card
           ───────────────────────────────────────────────────────────── */}
       <div className="w-full max-w-md mx-auto md:hidden bg-white rounded-3xl border border-[#E2E8F0] shadow-xl overflow-hidden select-none">
-        {/* Mobile Header: Curved Brand Top */}
-        <div className="bg-[#30AFFF] p-6 text-white text-center flex flex-col items-center justify-center rounded-b-[36px] shadow-sm">
+        {/* Mobile Header: Curved Brand Top with Water Wave */}
+        <div className="bg-[#30AFFF] p-6 text-white text-center flex flex-col items-center justify-center rounded-b-[36px] shadow-sm relative overflow-hidden">
+          {/* Animated Water Surface at bottom of Mobile Header (Multi-Layer Liquid Waves) */}
+          <div className="absolute bottom-0 left-0 right-0 h-14 overflow-hidden pointer-events-none">
+            {/* Wave 1: Aqua Mint Sub-Current */}
+            <svg
+              className="absolute bottom-0 left-0 w-[200%] h-full opacity-60 animate-water-wave-reverse"
+              viewBox="0 0 1200 60"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0,25 Q150,5 300,25 T600,25 T900,25 T1200,25 L1200,60 L0,60 Z"
+                fill="#92EEFF"
+              />
+            </svg>
+            {/* Wave 2: Sparkling Pure White Wave */}
+            <svg
+              className="absolute bottom-0 left-0 w-[200%] h-full opacity-75 animate-water-wave"
+              viewBox="0 0 1200 60"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0,32 Q150,48 300,32 T600,32 T900,32 T1200,32 L1200,60 L0,60 Z"
+                fill="#ffffff"
+              />
+            </svg>
+          </div>
           <div className="relative w-44 h-14 drop-shadow-sm mb-1 flex items-center justify-center">
             <Image
               src="/LogoWithText.png"

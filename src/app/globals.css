@@ -65,3 +65,89 @@ body {
   background-size: 200% 100%;
   animation: waterShimmer 5s infinite linear;
 }
+
+@keyframes wave {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes waveReverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes hydroFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(3deg);
+  }
+}
+
+@keyframes hydroPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes rippleExpand {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+.animate-water-wave {
+  animation: wave 8s linear infinite;
+}
+
+.animate-water-wave-fast {
+  animation: wave 5s linear infinite;
+}
+
+.animate-water-wave-slow {
+  animation: wave 14s linear infinite;
+}
+
+.animate-water-wave-reverse {
+  animation: waveReverse 9s linear infinite;
+}
+
+.animate-hydro-float {
+  animation: hydroFloat 4s ease-in-out infinite;
+}
+
+.animate-hydro-pulse {
+  animation: hydroPulse 2.5s ease-in-out infinite;
+}
+
+.animate-ripple-expand {
+  animation: rippleExpand 0.85s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes dash {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -1000;
+  }
+}

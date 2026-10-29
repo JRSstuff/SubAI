@@ -178,7 +178,7 @@ export function Navbar({ currentUser, onLogout }: NavbarProps) {
     <>
       {/* ─── DESKTOP HEADER (md:flex) ─── */}
       <header className="hidden md:flex sticky top-0 z-40 w-full h-16 bg-white/95 backdrop-blur-md border-b border-[#E2E8F0] px-6 items-center justify-between relative">
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-linear-to-r from-transparent via-[#30AFFF]/50 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-linear-to-r from-[#30AFFF]/20 via-[#92EEFF] to-[#30AFFF]/20 water-shimmer pointer-events-none" />
         <div className="flex items-center gap-6">
           <Link href={ROLE_HOME_ROUTE[roleKey] || "/report"} className="relative w-36 h-9 shrink-0">
             <Image
@@ -246,7 +246,8 @@ export function Navbar({ currentUser, onLogout }: NavbarProps) {
       </header>
 
       {/* ─── MOBILE MINIMAL TOP APP BAR (md:hidden) ─── */}
-      <header className="md:hidden sticky top-0 z-40 w-full h-14 bg-white/95 backdrop-blur-md border-b border-[#E2E8F0] px-4 flex items-center justify-between">
+      <header className="md:hidden sticky top-0 z-40 w-full h-14 bg-white/95 backdrop-blur-md border-b border-[#E2E8F0] px-4 flex items-center justify-between relative overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-linear-to-r from-[#30AFFF]/20 via-[#92EEFF] to-[#30AFFF]/20 water-shimmer pointer-events-none" />
         <Link href={ROLE_HOME_ROUTE[roleKey] || "/report"} className="relative w-28 h-7 shrink-0">
           <Image
             src="/LogoWithText.png"
@@ -309,6 +310,7 @@ export function Navbar({ currentUser, onLogout }: NavbarProps) {
 
         {/* Center: Prominent Elevated Circular Action FAB (100% Mathematically Centered) */}
         <div className="shrink-0 relative -top-5 flex items-center justify-center mx-1">
+          <div className="absolute -inset-1 rounded-full bg-[#92EEFF]/60 animate-ping opacity-40 pointer-events-none" />
           <Link
             href={centerAction.href}
             className={`w-14 h-14 rounded-full bg-[#30AFFF] text-white flex items-center justify-center shadow-lg shadow-[#30AFFF]/40 border-4 border-white active:scale-95 transition-all cursor-pointer ${
