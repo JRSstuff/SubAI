@@ -114,7 +114,7 @@ Rules:
           ],
           generationConfig: {
             temperature: 0.1,
-            maxOutputTokens: 350,
+            maxOutputTokens: 2048,
             responseMimeType: "application/json",
           },
         }),
@@ -150,31 +150,59 @@ Rules:
         parsed.classification ||
         "";
 
-      let detectedClassification: string | undefined = undefined;
-      if (typeof rawClassification === "string" && rawClassification.trim()) {
-        const rawClass = rawClassification.trim().toLowerCase();
-        if (rawClass.includes("curb")) {
-          detectedClassification = "Curb Inlet";
-        } else if (rawClass.includes("catch") || rawClass.includes("basin") || rawClass.includes("grate")) {
-          detectedClassification = "Catch Basin";
-        } else if (rawClass.includes("culvert") || rawClass.includes("pipe")) {
-          detectedClassification = "Culvert";
-        } else if (rawClass.includes("creek") || rawClass.includes("outfall") || rawClass.includes("river")) {
-          detectedClassification = "Creek Outfall";
-        } else if (rawClass.includes("canal") || rawClass.includes("ditch") || rawClass.includes("channel")) {
-          detectedClassification = "Open Canal";
+      const normalizedCategories = new Set<string>();
+      const allText = `${Array.isArray(rawCategories) ? rawCategories.join(" ") : ""} ${parsed.suggestedDescription || ""} ${rawText}`.toLowerCase();
+
+      if (allText.includes("bottle") || allText.includes("pet") || allText.includes("beverage") || allText.includes("cup")) {
+        normalizedCategories.add("pet_bottles");
+      }
+      if (allText.includes("packaging") || allText.includes("sachet") || allText.includes("wrapper") || allText.includes("plastic") || allText.includes("film") || allText.includes("bag")) {
+        normalizedCategories.add("flexible_packaging");
+      }
+      if (allText.includes("organic") || allText.includes("branch") || allText.includes("twig") || allText.includes("leaf") || allText.includes("leaves") || allText.includes("wood") || allText.includes("plant")) {
+        normalizedCategories.add("organic_debris");
+      }
+      if (allText.includes("silt") || allText.includes("mud") || allText.includes("sand") || allText.includes("sediment")) {
+        normalizedCategories.add("silt");
+      }
+      if (allText.includes("construction") || allText.includes("metallic") || allText.includes("rubble") || allText.includes("concrete") || allText.includes("slab")) {
+        normalizedCategories.add("construction_debris");
+      }
+      if (allText.includes("trash") || allText.includes("foam") || allText.includes("styrofoam") || allText.includes("waste") || allText.includes("debris")) {
+        normalizedCategories.add("residual_waste");
+      }
+
+      if (Array.isArray(rawCategories)) {
+        for (const cat of rawCategories) {
+          if (["pet_bottles", "flexible_packaging", "silt", "organic_debris", "construction_debris", "residual_waste"].includes(cat)) {
+            normalizedCategories.add(cat);
+          }
         }
+      }
+
+      let detectedClassification: string | undefined = undefined;
+      const classText = `${rawClassification} ${parsed.suggestedDescription || ""}`.toLowerCase();
+      if (classText.includes("culvert") || classText.includes("pipe")) {
+        detectedClassification = "Culvert";
+      } else if (classText.includes("curb") || classText.includes("inlet")) {
+        detectedClassification = "Curb Inlet";
+      } else if (classText.includes("catch") || classText.includes("basin") || classText.includes("grate")) {
+        detectedClassification = "Catch Basin";
+      } else if (classText.includes("creek") || classText.includes("outfall") || classText.includes("river")) {
+        detectedClassification = "Creek Outfall";
+      } else if (classText.includes("canal") || classText.includes("ditch") || classText.includes("channel")) {
+        detectedClassification = "Open Canal";
       }
 
       return {
         success: true,
         modelUsed: model,
         drainageClassification: detectedClassification,
-        detectedCategories: Array.isArray(rawCategories) ? rawCategories : [],
-        obstructionSeverity: parsed.obstructionSeverity || "partial",
+        detectedCategories: Array.from(normalizedCategories),
+        obstructionSeverity: parsed.obstructionSeverity || "substantial",
         suggestedDescription: parsed.suggestedDescription || "",
         recommendedAction: parsed.recommendedAction || "verified",
-        confidenceNotes: parsed.confidenceNotes || "Vision AI Analysis",
+        confidenceNotes: "Gemini 3.6 Flash",
         isUnclear: Boolean(parsed.isUnclear),
       };
     } catch {
