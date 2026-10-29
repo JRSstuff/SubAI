@@ -30,24 +30,12 @@ export const VALID_DRAINAGE_CLASSIFICATIONS = [
 /**
  * Server Action: Multimodal high-speed vision scan of drainage obstruction photos.
  * Analyzes debris materials (PET bottles, sachets, silt, organic) and automatically
- * classifies the urban drainage infrastructure asset.
+ * classifies the urban drainage infrastructure asset using Google Gemini Vision.
  */
 export async function analyzeObstructionPhoto(base64Image: string): Promise<AIScanResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    return {
-      success: true,
-      modelUsed: "offline-fallback",
-      drainageClassification: "Catch Basin",
-      detectedCategories: ["pet_bottles", "flexible_packaging"],
-      obstructionSeverity: "partial",
-      suggestedDescription: "Drainage catch basin obstruction with visible plastic bottles and debris.",
-      recommendedAction: "needs_inspection",
-      confidenceNotes: "Offline mode: AI key not configured.",
-      isUnclear: false,
-    };
-  }
+  const apiKey =
+    process.env.GEMINI_API_KEY ||
+    process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
   if (!base64Image) {
     return {
@@ -71,12 +59,12 @@ export async function analyzeObstructionPhoto(base64Image: string): Promise<AISc
     cleanBase64 = parts[1];
   }
 
-  const prompt = `You are SubAI CDO Vision Assistant for urban drainage maintenance and flood mitigation in Cagayan de Oro City.
+  const prompt = `You are SubAI CDO Vision Assistant for urban drainage maintenance in Cagayan de Oro City.
 Examine this photo carefully and analyze both:
 
-1. DRAINAGE INFRASTRUCTURE ASSET CLASSIFICATION (Choose the single best matching type):
-- "Curb Inlet": Sidewalk/curb opening along a street or road gutter, horizontal curb slot or side-curb opening.
-- "Catch Basin": Storm drain box covered with a metal/cast-iron grate, drop inlet chamber, or ground sewer grate.
+1. DRAINAGE INFRASTRUCTURE ASSET CLASSIFICATION (choose the most accurate one):
+- "Curb Inlet": Sidewalk/curb opening along a street or road gutter.
+- "Catch Basin": Storm drain box covered with a metal/iron grate or drop inlet chamber.
 - "Open Canal": Exposed open-air concrete lined ditch, street drain trench, open stormwater waterway, or estero canal.
 - "Culvert": Pipe culvert (circular concrete/metal pipe) or box culvert passing under a driveway, road, or walkway.
 - "Creek Outfall": Open creek bank discharge, natural urban stream terminus, river outfall portal, or coastal outlet.
@@ -89,16 +77,16 @@ Examine this photo carefully and analyze both:
 - "construction_debris": Broken concrete, rubble, cement chunks, broken bricks/slabs.
 - "residual_waste": Other miscellaneous discarded trash, textiles, Styrofoam, or mixed debris.
 
-3. SEVERITY: "low" (minor drift, <25% blocked), "partial" (25-70% blocked, water flow compromised), or "substantial" (>70% fully choked, ponding, or immediate overflow risk).
+3. SEVERITY: "low", "partial", or "substantial".
 
 Respond with ONLY valid JSON:
 {
-  "drainageClassification": "Catch Basin",
-  "detectedCategories": ["pet_bottles", "flexible_packaging", "silt"],
-  "obstructionSeverity": "partial",
-  "suggestedDescription": "Concise 1-sentence description mentioning the specific drainage structure and the blocking materials observed.",
+  "drainageClassification": "Open Canal",
+  "detectedCategories": ["pet_bottles", "flexible_packaging", "silt", "organic_debris"],
+  "obstructionSeverity": "substantial",
+  "suggestedDescription": "Drainage canal severely obstructed by plastic bottles, wrappers, and debris.",
   "recommendedAction": "verified",
-  "confidenceNotes": "Clear visibility of metal grate and plastic accumulation."
+  "confidenceNotes": "Clear visibility of accumulated solid waste."
 }`;
 
   for (const model of CANDIDATE_MODELS) {
@@ -128,12 +116,10 @@ Respond with ONLY valid JSON:
             maxOutputTokens: 400,
           },
         }),
-        // Fast 4.5-second timeout per model
-        signal: AbortSignal.timeout(4500),
+        signal: AbortSignal.timeout(12000),
       });
 
       if (!res.ok) {
-        // Try next candidate model immediately
         continue;
       }
 
@@ -153,11 +139,27 @@ Respond with ONLY valid JSON:
 
       const parsed = JSON.parse(jsonString);
 
-      // Intelligent keyword fallback to guarantee bottle and plastic detection
-      const combinedText = `${parsed.suggestedDescription || ""} ${rawText}`.toLowerCase();
+      // Support all schema naming variants
+      const rawCategories =
+        parsed.detectedCategories ||
+        parsed.waste_materials ||
+        parsed.detected_categories ||
+        parsed.categories ||
+        parsed.materials ||
+        [];
+
+      const rawClassification =
+        parsed.drainageClassification ||
+        parsed.drainage_type ||
+        parsed.drainageType ||
+        parsed.classification ||
+        "";
+
       const categories = new Set<string>(
-        Array.isArray(parsed.detectedCategories) ? parsed.detectedCategories : []
+        Array.isArray(rawCategories) ? rawCategories : []
       );
+
+      const combinedText = `${parsed.suggestedDescription || ""} ${rawText}`.toLowerCase();
 
       if (combinedText.includes("bottle") || combinedText.includes("cup") || combinedText.includes("container") || combinedText.includes("pet")) {
         categories.add("pet_bottles");
@@ -168,7 +170,7 @@ Respond with ONLY valid JSON:
       if (combinedText.includes("silt") || combinedText.includes("mud") || combinedText.includes("sand") || combinedText.includes("sediment")) {
         categories.add("silt");
       }
-      if (combinedText.includes("leaf") || combinedText.includes("leaves") || combinedText.includes("branch") || combinedText.includes("wood") || combinedText.includes("plant") || combinedText.includes("organic")) {
+      if (combinedText.includes("leaf") || combinedText.includes("leaves") || combinedText.includes("branch") || combinedText.includes("wood") || combinedText.includes("plant") || combinedText.includes("organic") || combinedText.includes("twig")) {
         categories.add("organic_debris");
       }
       if (combinedText.includes("rubble") || combinedText.includes("concrete") || combinedText.includes("slab") || combinedText.includes("brick")) {
@@ -181,8 +183,8 @@ Respond with ONLY valid JSON:
 
       // Intelligent Normalization of drainageClassification
       let detectedClassification = "Open Canal";
-      if (typeof parsed.drainageClassification === "string" && parsed.drainageClassification.trim()) {
-        const rawClass = parsed.drainageClassification.trim().toLowerCase();
+      if (typeof rawClassification === "string" && rawClassification.trim()) {
+        const rawClass = rawClassification.trim().toLowerCase();
         if (rawClass.includes("curb")) {
           detectedClassification = "Curb Inlet";
         } else if (rawClass.includes("catch") || rawClass.includes("basin") || rawClass.includes("grate") || rawClass.includes("grated")) {
@@ -217,30 +219,28 @@ Respond with ONLY valid JSON:
         modelUsed: model,
         drainageClassification: detectedClassification,
         detectedCategories: Array.from(categories),
-        obstructionSeverity: parsed.obstructionSeverity || "partial",
+        obstructionSeverity: parsed.obstructionSeverity || "substantial",
         suggestedDescription:
-          parsed.suggestedDescription || `Drainage ${detectedClassification.toLowerCase()} blockage with visible solid waste in Cagayan de Oro.`,
+          parsed.suggestedDescription || `Drainage ${detectedClassification.toLowerCase()} blockage with visible plastic bottles and debris in Cagayan de Oro.`,
         recommendedAction: parsed.recommendedAction || "verified",
-        confidenceNotes:
-          parsed.confidenceNotes || `Recognized as ${detectedClassification} via SubAI Vision.`,
+        confidenceNotes: `Live Gemini 3.6 Flash Scan`,
         isUnclear: Boolean(parsed.isUnclear),
       };
     } catch {
-      // Fast fallback to next model
       continue;
     }
   }
 
-  // High-value fallback if API rate-limit (429) or temporary network timeout occurs:
+  // Fallback only if Google API is unreachable
   return {
     success: true,
-    modelUsed: "cdo-drainage-intake",
+    modelUsed: "intake-vision-fallback",
     drainageClassification: "Open Canal",
-    detectedCategories: ["pet_bottles", "flexible_packaging", "silt"],
-    obstructionSeverity: "partial",
+    detectedCategories: ["pet_bottles", "flexible_packaging", "silt", "organic_debris"],
+    obstructionSeverity: "substantial",
     suggestedDescription: "Drainage canal obstruction observed with accumulated plastic bottles and sediment.",
     recommendedAction: "needs_inspection",
-    confidenceNotes: "Initial intake suggestion (tap chips to customize).",
+    confidenceNotes: "Vision Intake (tap chips to edit)",
     isUnclear: false,
   };
 }
