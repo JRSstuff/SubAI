@@ -227,6 +227,11 @@ export default function ReportPage() {
           setAiResult(scan);
 
           if (scan.success) {
+            if (scan.drainageClassification) {
+              setClassification(scan.drainageClassification);
+              setCustomClassification("");
+            }
+
             if (scan.detectedCategories && scan.detectedCategories.length > 0) {
               setSelectedCategories((prev) => {
                 const merged = new Set([...prev, ...scan.detectedCategories]);
@@ -480,12 +485,25 @@ export default function ReportPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-[#0F172A] flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-[#30AFFF]" />
-                        <span>Identified Materials</span>
+                        <span>AI Vision Intake</span>
                       </span>
                       <span className="text-[11px] font-semibold text-[#059669] bg-[#C4F7CA] px-2 py-0.5 rounded-full">
                         {aiResult.confidenceNotes || "Vision"}
                       </span>
                     </div>
+
+                    {/* Detected Structure Pill */}
+                    {aiResult.drainageClassification && (
+                      <div className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-xl border border-[#92EEFF] text-xs">
+                        <span className="text-[#64748B] font-medium flex items-center gap-1">
+                          Structure:
+                        </span>
+                        <span className="font-bold text-[#0369A1] flex items-center gap-1">
+                          <Check className="w-3 h-3 text-[#10B981]" />
+                          {aiResult.drainageClassification} (Auto-selected)
+                        </span>
+                      </div>
+                    )}
 
                     <div className="flex flex-wrap gap-1.5">
                       {aiResult.detectedCategories.map((cat) => (
@@ -718,9 +736,17 @@ export default function ReportPage() {
 
             {/* Classification with Icons */}
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-[#0F172A]">
-                Classification
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-[#0F172A]">
+                  Classification
+                </label>
+                {aiResult?.drainageClassification && (
+                  <span className="text-[10px] font-bold text-[#0369A1] bg-[#92EEFF]/40 border border-[#30AFFF]/40 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5 text-[#30AFFF]" />
+                    AI recognized: {aiResult.drainageClassification}
+                  </span>
+                )}
+              </div>
 
               <div className="flex flex-wrap gap-1.5">
                 {CLASSIFICATION_OPTIONS.map((item) => {
