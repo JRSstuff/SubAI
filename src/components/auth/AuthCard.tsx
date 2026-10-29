@@ -217,27 +217,27 @@ export function AuthCard() {
   return (
     <div className="w-full max-w-md sm:max-w-lg mx-auto bg-white rounded-3xl border border-[#E2E8F0] shadow-xl overflow-hidden select-none">
       {/* ─── HEADER: Curved Brand Card Top (Matching Reference Images) ─── */}
-      <div className="bg-[#30AFFF] p-6 text-white text-center flex flex-col items-center rounded-b-[36px] shadow-sm">
-        <div className="relative w-44 h-16 drop-shadow-sm mb-1">
+      <div className="bg-[#30AFFF] p-6 text-white text-center flex flex-col items-center justify-center rounded-b-[36px] shadow-sm">
+        <div className="relative w-48 h-16 drop-shadow-sm mb-1.5 flex items-center justify-center">
           <Image
             src="/LogoWithText.png"
             alt="SubAI Logo"
             fill
-            sizes="176px"
+            sizes="192px"
             priority
             className="object-contain"
           />
         </div>
-        <p className="text-xs text-white/95 font-medium">
+        <p className="text-xs text-white/95 font-medium text-center max-w-xs mx-auto leading-relaxed">
           Urban Drainage & Circular Recovery Terminal
         </p>
 
         {/* Segmented Switcher Pill */}
-        <div className="mt-4 inline-flex p-1 bg-black/15 rounded-2xl text-xs font-bold">
+        <div className="mt-4 inline-flex p-1 bg-black/15 rounded-2xl text-xs font-bold justify-center items-center">
           <button
             type="button"
             onClick={() => toggleMode("login")}
-            className={`px-6 py-2 rounded-xl transition-all cursor-pointer min-h-[38px] ${
+            className={`px-6 py-2 rounded-xl transition-all cursor-pointer min-h-[38px] text-center ${
               mode === "login"
                 ? "bg-white text-[#30AFFF] shadow-sm"
                 : "text-white hover:text-white/80"
@@ -248,7 +248,7 @@ export function AuthCard() {
           <button
             type="button"
             onClick={() => toggleMode("register")}
-            className={`px-6 py-2 rounded-xl transition-all cursor-pointer min-h-[38px] ${
+            className={`px-6 py-2 rounded-xl transition-all cursor-pointer min-h-[38px] text-center ${
               mode === "register"
                 ? "bg-white text-[#30AFFF] shadow-sm"
                 : "text-white hover:text-white/80"
@@ -263,26 +263,28 @@ export function AuthCard() {
       <div className="p-5 sm:p-7 flex flex-col gap-3.5">
         {/* Quick Pilot 1-Tap Entry (When in Login Mode) */}
         {mode === "login" && (
-          <div className="flex flex-col gap-2 pb-1 bg-[#F8FAFC] p-3 rounded-2xl border border-[#E2E8F0]">
-            <span className="text-[11px] font-bold text-[#475569] flex items-center justify-between uppercase tracking-wider">
-              <span className="flex items-center gap-1 text-[#0F172A]">
-                <Sparkles className="w-3.5 h-3.5 text-[#30AFFF]" />
-                1-Tap Quick Pilot Login:
+          <div className="flex flex-col gap-2.5 pb-2 bg-[#F8FAFC] p-3.5 rounded-2xl border border-[#E2E8F0] text-center">
+            <div className="flex items-center justify-center gap-1.5 text-center">
+              <Sparkles className="w-3.5 h-3.5 text-[#30AFFF]" />
+              <span className="text-[11px] font-extrabold text-[#0F172A] uppercase tracking-wider">
+                1-Tap Quick Pilot Login
               </span>
-              <span className="text-[10px] text-[#64748B] lowercase font-medium">instant test</span>
-            </span>
+              <span className="text-[10px] text-[#64748B] lowercase font-medium bg-white px-2 py-0.5 rounded-full border border-[#E2E8F0]">
+                instant test
+              </span>
+            </div>
 
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+            <div className="flex flex-wrap justify-center gap-2">
               {DEMO_ACCOUNTS.map((acc) => (
                 <button
                   key={acc.role}
                   type="button"
                   onClick={() => handleQuickLogin(acc.email)}
                   disabled={isLoading || redirecting}
-                  className="py-2 px-2.5 bg-white hover:bg-[#92EEFF]/30 active:bg-[#92EEFF] border border-[#CBD5E1] hover:border-[#30AFFF] rounded-xl text-xs font-bold text-[#0F172A] transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 shadow-2xs min-h-[46px]"
+                  className="flex-1 min-w-[95px] max-w-[130px] sm:max-w-none py-2 px-2 bg-white hover:bg-[#92EEFF]/30 active:bg-[#92EEFF] border border-[#CBD5E1] hover:border-[#30AFFF] rounded-xl text-xs font-bold text-[#0F172A] transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 shadow-2xs min-h-[46px] text-center"
                 >
-                  <span className="text-[#30AFFF] font-extrabold">{acc.label}</span>
-                  <span className="text-[9px] text-[#64748B] font-medium truncate w-full text-center">
+                  <span className="text-[#30AFFF] font-extrabold text-center block w-full">{acc.label}</span>
+                  <span className="text-[9px] text-[#64748B] font-medium truncate w-full text-center block">
                     {acc.target}
                   </span>
                 </button>
