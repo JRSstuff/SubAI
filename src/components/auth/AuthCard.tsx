@@ -295,27 +295,30 @@ export function AuthCard() {
 
         {/* Role Selection (When in Register Mode) */}
         {mode === "register" && (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-bold text-[#475569] uppercase tracking-wider">
+          <div className="flex flex-col gap-2 text-center">
+            <label className="text-[11px] font-extrabold text-[#475569] uppercase tracking-wider text-center block">
               Authorized Account Role
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {ROLES.map((r) => {
+              {ROLES.map((r, idx) => {
                 const Icon = r.icon;
                 const isSelected = role === r.id;
+                const isLast = idx === ROLES.length - 1;
                 return (
                   <button
                     key={r.id}
                     type="button"
                     onClick={() => setRole(r.id)}
-                    className={`flex items-center gap-2 p-2.5 rounded-2xl border text-left transition-all cursor-pointer min-h-[44px] ${
+                    className={`flex items-center justify-center gap-2 p-2.5 rounded-2xl border text-center transition-all cursor-pointer min-h-[46px] ${
+                      isLast ? "col-span-2 max-w-[220px] w-full mx-auto" : ""
+                    } ${
                       isSelected
                         ? `${r.activeColor} shadow-xs ring-2 ring-[#30AFFF]`
                         : "bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0] hover:bg-[#F1F5F9]"
                     }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
-                    <span className="text-xs font-bold truncate">{r.title}</span>
+                    <span className="text-xs font-bold truncate text-center">{r.title}</span>
                   </button>
                 );
               })}
@@ -329,7 +332,7 @@ export function AuthCard() {
             type="text"
             id="auth-username"
             autoComplete="username"
-            placeholder={mode === "login" ? "Email or Username" : "Full Name / Student ID"}
+            placeholder={mode === "login" ? "Email or Username" : "Full Name / User ID"}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             onKeyDown={(e) => {

@@ -743,7 +743,7 @@ export default function ReviewPage() {
                   >
                     <option value="Facilities Operations Team 1">Facilities Operations Team 1</option>
                     <option value="Drainage Maintenance Squad">Drainage Maintenance Squad</option>
-                    <option value="Student Eco-Volunteer Crew">Student Eco-Volunteer Crew</option>
+                    <option value="Community Eco-Volunteer Crew">Community Eco-Volunteer Crew</option>
                     <option value="Partner Recycler Logistics">Partner Recycler Logistics</option>
                   </select>
                 </div>
