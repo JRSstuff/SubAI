@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
 
 export const metadata: Metadata = {
   title: "TubigLoop CDO - Urban Drainage Triage & Circular Waste Recovery",
@@ -37,6 +38,7 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body className="min-h-full flex flex-col bg-[#F8FAFC] text-[#0F172A] selection:bg-[#92EEFF] selection:text-[#0F172A]">
         {children}
+        <PwaInstallPrompt />
       </body>
     </html>
   );

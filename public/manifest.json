@@ -1,9 +1,11 @@
 {
-  "name": "TubigLoop CDO",
-  "short_name": "TubigLoop",
+  "name": "SubAI - Urban Drainage Terminal",
+  "short_name": "SubAI",
   "description": "Urban Drainage Obstruction Triage & Circular Waste Recovery for Cagayan de Oro City.",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#F8FAFC",
   "theme_color": "#30AFFF",
   "icons": [
