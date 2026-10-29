@@ -48,3 +48,20 @@ body {
 .tubig-map-custom-popup .leaflet-popup-tip {
   background: white;
 }
+
+
+/* Ambient Water Ripple & Flow Animations */
+@keyframes waterShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.water-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(146, 238, 255, 0.35) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: waterShimmer 5s infinite linear;
+}

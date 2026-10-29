@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import gsap from "gsap";
 import {
   BarChart3,
   Scale,
@@ -32,6 +33,7 @@ export default function DashboardPage() {
   });
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const dashboardRef = useRef<HTMLDivElement>(null);
 
   const loadMetrics = async () => {
     setIsLoading(true);
@@ -45,6 +47,13 @@ export default function DashboardPage() {
   useEffect(() => {
     loadMetrics();
   }, []);
+  useEffect(() => {
+    if (!dashboardRef.current) return;
+    const cards = dashboardRef.current.querySelectorAll(".metric-card-anim");
+    if (cards.length > 0) {
+      gsap.fromTo(cards, { opacity: 0, y: 16 }, { opacity: 1, y: 0, stagger: 0.08, duration: 0.5 });
+    }
+  }, [isDemoMode]);
 
   const displayMetrics = isDemoMode
     ? {
@@ -91,7 +100,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#F8FAFC] pb-28 md:pb-12 text-[#0F172A] flex flex-col">
       <Navbar />
 
-      <main className="max-w-6xl w-full mx-auto px-4 py-5 sm:py-8 flex flex-col gap-5">
+      <main ref={dashboardRef} className="max-w-6xl w-full mx-auto px-4 py-5 sm:py-8 flex flex-col gap-5">
         {/* Minimal Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex flex-col gap-1">
@@ -147,10 +156,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ─── 4 CORE METRIC CARDS (Using Exact 4 Palette Colors) ─── */}
+        {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ 4 CORE METRIC CARDS (Using Exact 4 Palette Colors) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* 1. Primary Blue #30AFFF */}
-          <div className="bg-white p-4 rounded-3xl border border-[#E2E8F0] shadow-xs flex flex-col justify-between gap-3">
+          <div className="bg-white p-4 rounded-3xl border border-[#E2E8F0] shadow-xs flex flex-col justify-between gap-3 metric-card-anim">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
                 Total Collected
@@ -171,7 +180,7 @@ export default function DashboardPage() {
           </div>
 
           {/* 2. Loop Green #C4F7CA */}
-          <div className="bg-white p-4 rounded-3xl border border-[#E2E8F0] shadow-xs flex flex-col justify-between gap-3">
+          <div className="bg-white p-4 rounded-3xl border border-[#E2E8F0] shadow-xs flex flex-col justify-between gap-3 metric-card-anim">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
                 Accepted Recycled
@@ -192,7 +201,7 @@ export default function DashboardPage() {
           </div>
 
           {/* 3. Aqua Clear #92EEFF */}
-          <div className="bg-white p-4 rounded-3xl border border-[#E2E8F0] shadow-xs flex flex-col justify-between gap-3">
+          <div className="bg-white p-4 rounded-3xl border border-[#E2E8F0] shadow-xs flex flex-col justify-between gap-3 metric-card-anim">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
                 Awaiting Handover
@@ -213,7 +222,7 @@ export default function DashboardPage() {
           </div>
 
           {/* 4. Eco Mint #D8FFC5 */}
-          <div className="bg-white p-4 rounded-3xl border border-[#E2E8F0] shadow-xs flex flex-col justify-between gap-3">
+          <div className="bg-white p-4 rounded-3xl border border-[#E2E8F0] shadow-xs flex flex-col justify-between gap-3 metric-card-anim">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
                 Residual & Silt
@@ -234,7 +243,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ─── MASS BALANCE EQUATION RECONCILIATION CARD ─── */}
+        {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MASS BALANCE EQUATION RECONCILIATION CARD Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
         <div className="bg-white p-5 rounded-3xl border border-[#E2E8F0] shadow-xs flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#475569] uppercase tracking-wider flex items-center gap-1.5">
@@ -270,7 +279,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ─── DETAILED MATERIAL CATEGORY BREAKDOWN ─── */}
+        {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DETAILED MATERIAL CATEGORY BREAKDOWN Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
         <div className="bg-white p-5 rounded-3xl border border-[#E2E8F0] shadow-xs flex flex-col gap-3">
           <span className="text-xs font-bold text-[#475569] uppercase tracking-wider flex items-center gap-1.5">
             <BarChart3 className="w-4 h-4 text-[#30AFFF]" />
@@ -315,3 +324,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+

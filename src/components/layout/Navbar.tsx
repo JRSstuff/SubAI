@@ -177,7 +177,8 @@ export function Navbar({ currentUser, onLogout }: NavbarProps) {
   return (
     <>
       {/* ─── DESKTOP HEADER (md:flex) ─── */}
-      <header className="hidden md:flex sticky top-0 z-40 w-full h-16 bg-white border-b border-[#E2E8F0] px-6 items-center justify-between">
+      <header className="hidden md:flex sticky top-0 z-40 w-full h-16 bg-white/95 backdrop-blur-md border-b border-[#E2E8F0] px-6 items-center justify-between relative">
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-linear-to-r from-transparent via-[#30AFFF]/50 to-transparent pointer-events-none" />
         <div className="flex items-center gap-6">
           <Link href={ROLE_HOME_ROUTE[roleKey] || "/report"} className="relative w-36 h-9 shrink-0">
             <Image

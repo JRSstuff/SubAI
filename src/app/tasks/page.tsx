@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useTransition, useRef, useMemo } from "react";
+import gsap from "gsap";
 import {
   Wrench,
   Camera,
@@ -56,6 +57,7 @@ export default function TasksPage() {
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
   const [isLoading, setIsLoading] = useState(true);
+  const kpiGridRef = useRef<HTMLDivElement>(null);
 
   // Search & Filters for large task volumes
   const [searchQuery, setSearchQuery] = useState("");
@@ -144,6 +146,15 @@ export default function TasksPage() {
   useEffect(() => {
     loadTasks();
   }, []);
+
+  useEffect(() => {
+    if (!kpiGridRef.current) return;
+    gsap.fromTo(
+      kpiGridRef.current.children,
+      { opacity: 0, y: 14, scale: 0.98 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.07, ease: "power2.out" }
+    );
+  }, [isLoading, activeTab]);
 
   // Quick stats
   const activeTasksList = useMemo(() => tasks.filter((t) => !isTaskCompleted(t)), [tasks]);
@@ -363,7 +374,7 @@ export default function TasksPage() {
         </div>
 
         {/* ─── METRIC KPI SUMMARY CARDS ─── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div ref={kpiGridRef} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Card 1: Active Tasks */}
           <div
             onClick={() => setActiveTab("active")}
