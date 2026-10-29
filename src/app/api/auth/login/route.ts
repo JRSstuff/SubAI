@@ -1,27 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import crypto from "crypto";
+import { loginWithFirebase, registerWithFirebase } from "@/lib/firebase/auth";
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://cvfaethiloimouyxbanb.supabase.co";
-
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "sb_publishable_CDDcZdQiIZS8pJPAp1J4yw_L9ABd4k7";
-
-function verifyPassword(password: string, combined: string): boolean {
-  try {
-    const [salt, storedHash] = combined.split(":");
-    if (!salt || !storedHash) return false;
-    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
-    return hash === storedHash;
-  } catch {
-    return false;
-  }
-}
+const DEMO_PRESETS: Record<string, { fullName: string; role: string }> = {
+  "reporter@tubigloop.edu": { fullName: "CDO Reporter", role: "reporter" },
+  "reviewer@tubigloop.edu": { fullName: "CDO Reviewer", role: "reviewer" },
+  "collector@tubigloop.edu": { fullName: "CDO Collector", role: "collector" },
+  "recycler@tubigloop.edu": { fullName: "CDO Recycler", role: "recycler" },
+  "admin@tubigloop.edu": { fullName: "System Administrator", role: "admin" },
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,43 +39,76 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    const search = username.toLowerCase();
+    const cleanEmail = username.toLowerCase();
+    let user;
 
-    // Query app_users by email or username
-    const { data: user, error } = await supabase
-      .from("app_users")
-      .select("id, full_name, email, password_hash, role")
-      .or(`email.eq.${search},full_name.ilike.${username}`)
-      .maybeSingle();
+    // 1. Attempt login with Firebase
+    try {
+      user = await loginWithFirebase(username, password);
+    } catch (fbErr: any) {
+      const code = fbErr?.code || "";
 
-    if (error || !user || !user.password_hash) {
-      return NextResponse.json(
-        { success: false, message: "Invalid email/username or password." },
-        { status: 401 }
-      );
-    }
+      // Check if Email/Password provider is disabled in Firebase Console
+      if (code === "auth/operation-not-allowed") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Email/Password sign-in is disabled in your Firebase project. Please enable it in Firebase Console > Authentication > Sign-in method.",
+          },
+          { status: 403 }
+        );
+      }
 
-    if (!verifyPassword(password, user.password_hash)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid email/username or password." },
-        { status: 401 }
-      );
+      // If user doesn't exist yet and it's one of the 1-Tap Quick Pilot accounts, auto-provision it in Firebase!
+      if (
+        (code === "auth/invalid-credential" ||
+          code === "auth/user-not-found" ||
+          code === "auth/wrong-password") &&
+        DEMO_PRESETS[cleanEmail] &&
+        password === "tubigloop123"
+      ) {
+        try {
+          const preset = DEMO_PRESETS[cleanEmail];
+          user = await registerWithFirebase(preset.fullName, cleanEmail, password, preset.role);
+        } catch (regErr: any) {
+          if (regErr?.code === "auth/operation-not-allowed") {
+            return NextResponse.json(
+              {
+                success: false,
+                message: "Email/Password sign-in is disabled in your Firebase project. Please enable it in Firebase Console > Authentication > Sign-in method.",
+              },
+              { status: 403 }
+            );
+          }
+        }
+      }
+
+      if (!user) {
+        let message = "Invalid email/username or password. Please try again.";
+        if (code === "auth/too-many-requests") {
+          message = "Access temporarily disabled due to many failed attempts. Try again later.";
+        } else if (code === "auth/network-request-failed") {
+          message = "Network error connecting to Firebase. Please check your internet connection.";
+        } else if (fbErr?.message && !fbErr.message.includes("auth/")) {
+          message = fbErr.message;
+        }
+        return NextResponse.json({ success: false, message }, { status: 401 });
+      }
     }
 
     const sessionData = {
       id: user.id,
-      username: user.full_name,
+      username: user.username,
       email: user.email,
       role: user.role,
     };
 
     const response = NextResponse.json({
       success: true,
-      message: `Welcome back, ${user.full_name}!`,
+      message: `Welcome back, ${user.username}!`,
       user: {
         id: user.id,
-        username: user.full_name,
+        username: user.username,
         email: user.email,
         role: String(user.role).toUpperCase(),
       },
@@ -98,17 +117,17 @@ export async function POST(request: NextRequest) {
     response.cookies.set("tubigloop_session", JSON.stringify(sessionData), {
       httpOnly: true,
       secure: false, // allow http over LAN/hotspot
-      sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
     return response;
-  } catch (err: unknown) {
+  } catch (error: any) {
     return NextResponse.json(
       {
         success: false,
-        message: err instanceof Error ? err.message : "Authentication error.",
+        message: error?.message || "An unexpected error occurred during authentication.",
       },
       { status: 500 }
     );

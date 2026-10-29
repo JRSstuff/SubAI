@@ -105,7 +105,7 @@ export default function DashboardPage() {
               Impact Dashboard
             </h1>
             <p className="text-xs sm:text-sm text-[#475569]">
-              Reconciling mass balance physics and circular custody receipts across USTP campus drainage.
+              Reconciling mass balance physics and circular custody receipts across CDO urban drainage.
             </p>
           </div>
 
@@ -166,7 +166,7 @@ export default function DashboardPage() {
               <span className="text-xs font-bold text-[#64748B] ml-1">kg</span>
             </div>
             <span className="text-[10px] font-semibold text-[#30AFFF]">
-              Campus culvert extraction
+              Culvert waste extraction
             </span>
           </div>
 
@@ -208,7 +208,7 @@ export default function DashboardPage() {
               <span className="text-xs font-bold text-[#64748B] ml-1">kg</span>
             </div>
             <span className="text-[10px] font-semibold text-[#0284C7]">
-              Stored at campus station
+              Stored at staging station
             </span>
           </div>
 
@@ -229,7 +229,7 @@ export default function DashboardPage() {
               <span className="text-xs font-bold text-[#64748B] ml-1">kg</span>
             </div>
             <span className="text-[10px] font-semibold text-[#10B981]">
-              Safe campus disposal
+              Safe municipal disposal
             </span>
           </div>
         </div>

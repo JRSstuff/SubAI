@@ -67,7 +67,7 @@ export function SplashScreen({ onComplete, minDuration = 1200 }: SplashScreenPro
             >
               <div className="relative w-64 h-24 sm:w-72 sm:h-28">
                 <Image
-                  src="/TubigLoopLogoWithText.png"
+                  src="/LogoWithText.png"
                   alt="TubigLoop - Pure Water Circulation"
                   fill
                   sizes="(max-width: 640px) 256px, 288px"

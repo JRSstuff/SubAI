@@ -69,7 +69,7 @@ export default function RainBankPage() {
   const preFullnessPercent = Math.min(100, Math.round((currentVolume / tankCapacity) * 100));
   const addedFullnessPercent = Math.min(100 - preFullnessPercent, Math.round((capturedVolume / tankCapacity) * 100));
 
-  // Days of campus supply provided
+  // Days of reserve supply provided
   const daysOfReserve = dailyDemand > 0 ? (postStormTotal / dailyDemand).toFixed(1) : "0";
   // Estimated municipal water cost avoided (₱35 per m³ / 1,000L = ₱0.035 per L)
   const costAvoidancePhp = (capturedVolume * 0.035).toFixed(2);
@@ -93,7 +93,7 @@ export default function RainBankPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="px-2.5 py-0.5 bg-[#92EEFF] text-[#0F172A] text-xs font-black rounded-md tracking-wider uppercase">
-                Campus Hydrology
+                Urban Hydrology
               </span>
               <span className="px-2.5 py-0.5 bg-[#D8FFC5] text-[#0F172A] text-xs font-black rounded-md tracking-wider uppercase border border-[#C4F7CA]">
                 Planning Tool
@@ -103,7 +103,7 @@ export default function RainBankPage() {
               Rain Bank Capacity Calculator
             </h1>
             <p className="text-sm text-[#475569] mt-0.5">
-              Simulate rainwater retention yield, campus reservoir buffer, and non-potable substitution.
+              Simulate rainwater retention yield, reservoir buffer, and non-potable substitution.
             </p>
           </div>
 
@@ -134,7 +134,7 @@ export default function RainBankPage() {
                 <code className="px-1.5 py-0.5 bg-[#F1F5F9] rounded font-mono font-bold text-[#0F172A]">
                   V = Area × Rainfall × Efficiency
                 </code>
-                ) for campus facilities infrastructure planning. Because these are simulated engineering projections,
+                ) for urban facilities infrastructure planning. Because these are simulated engineering projections,
                 they are <strong>strictly excluded</strong> from TubigLoop’s verified circular mass balance totals to prevent false impact accounting.
               </p>
             </div>
@@ -305,7 +305,7 @@ export default function RainBankPage() {
 
               <div>
                 <div className="flex justify-between text-xs font-bold mb-1">
-                  <span>Daily Campus Non-Potable Demand (Washrooms & Grounds)</span>
+                  <span>Daily Non-Potable Demand (Washrooms & Grounds)</span>
                   <span className="font-mono text-[#0F172A]">{dailyDemand.toLocaleString()} L / day</span>
                 </div>
                 <input
@@ -409,7 +409,7 @@ export default function RainBankPage() {
                 <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
                   <div className="flex items-center gap-1.5 text-[#64748B] text-[11px] font-bold">
                     <Calendar className="w-3.5 h-3.5 text-[#30AFFF]" />
-                    Campus Reserve
+                    Water Reserve
                   </div>
                   <div className="mt-1 text-xl font-black text-[#0F172A]">
                     {daysOfReserve}{" "}

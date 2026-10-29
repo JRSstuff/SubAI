@@ -23,7 +23,7 @@ import {
 const ROLES = [
   {
     id: "reporter",
-    title: "Campus Reporter",
+    title: "Community Reporter",
     desc: "Spot & report drainage blocks",
     icon: Megaphone,
     activeColor: "bg-[#92EEFF] text-[#0F172A] border-[#30AFFF]",
@@ -51,7 +51,7 @@ const ROLES = [
   },
   {
     id: "admin",
-    title: "Campus Administrator",
+    title: "System Administrator",
     desc: "Governance, RBAC & system audit",
     icon: Crown,
     activeColor: "bg-[#0F172A] text-white border-[#30AFFF]",
@@ -170,7 +170,7 @@ export function AuthCard() {
       return;
     }
     if (!cleanEmail || !cleanEmail.includes("@") || !cleanEmail.includes(".")) {
-      setServerResponse({ success: false, message: "Please enter a valid campus email." });
+      setServerResponse({ success: false, message: "Please enter a valid email address." });
       return;
     }
     if (!password || password.length < 6) {
@@ -220,8 +220,8 @@ export function AuthCard() {
       <div className="bg-[#30AFFF] p-6 text-white text-center flex flex-col items-center rounded-b-[36px] shadow-sm">
         <div className="relative w-44 h-16 drop-shadow-sm mb-1">
           <Image
-            src="/TubigLoopLogoWithText.png"
-            alt="TubigLoop Logo"
+            src="/LogoWithText.png"
+            alt="SubAI Logo"
             fill
             sizes="176px"
             priority
@@ -229,7 +229,7 @@ export function AuthCard() {
           />
         </div>
         <p className="text-xs text-white/95 font-medium">
-          Campus Drainage & Circular Recovery Terminal
+          Urban Drainage & Circular Recovery Terminal
         </p>
 
         {/* Segmented Switcher Pill */}
@@ -295,7 +295,7 @@ export function AuthCard() {
         {mode === "register" && (
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-bold text-[#475569] uppercase tracking-wider">
-              Authorized Campus Role
+              Authorized Account Role
             </label>
             <div className="grid grid-cols-2 gap-2">
               {ROLES.map((r) => {
@@ -352,7 +352,7 @@ export function AuthCard() {
               type="email"
               id="auth-email"
               autoComplete="email"
-              placeholder="Campus Email (@ustp.edu.ph)"
+              placeholder="Email Address (e.g. user@tubigloop.ph)"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => {

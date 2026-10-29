@@ -1,22 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import crypto from "crypto";
-
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://cvfaethiloimouyxbanb.supabase.co";
-
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "sb_publishable_CDDcZdQiIZS8pJPAp1J4yw_L9ABd4k7";
-
-function hashPassword(password: string): string {
-  const salt = crypto.randomBytes(16).toString("hex");
-  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
-  return `${salt}:${hash}`;
-}
+import { registerWithFirebase } from "@/lib/firebase/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,68 +47,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Check if email already exists
-    const { data: existingUser } = await supabase
-      .from("app_users")
-      .select("id")
-      .eq("email", email.toLowerCase())
-      .maybeSingle();
-
-    if (existingUser) {
+    // Register user in Firebase Authentication & save role profile in Firestore
+    let newUser;
+    try {
+      newUser = await registerWithFirebase(username, email, password, role);
+    } catch (fbErr: any) {
+      const code = fbErr?.code || "";
+      if (code === "auth/operation-not-allowed") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Email/Password sign-in is disabled in your Firebase project. Please enable it in Firebase Console > Authentication > Sign-in method.",
+          },
+          { status: 403 }
+        );
+      } else if (code === "auth/email-already-in-use") {
+        return NextResponse.json(
+          { success: false, message: "An account with this email already exists. Please sign in." },
+          { status: 400 }
+        );
+      } else if (code === "auth/weak-password") {
+        return NextResponse.json(
+          { success: false, message: "Password is too weak. Please choose a stronger password." },
+          { status: 400 }
+        );
+      } else if (code === "auth/invalid-email") {
+        return NextResponse.json(
+          { success: false, message: "The email address is improperly formatted." },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
-        {
-          success: false,
-          message: "An account with this email already exists. Please sign in.",
-        },
+        { success: false, message: fbErr?.message || "Registration failed." },
         { status: 400 }
-      );
-    }
-
-    // Fetch site ID
-    const { data: defaultSite } = await supabase
-      .from("sites")
-      .select("id")
-      .limit(1)
-      .maybeSingle();
-
-    // Insert into app_users
-    const { data: newUser, error: insertError } = await supabase
-      .from("app_users")
-      .insert({
-        full_name: username,
-        email: email.toLowerCase(),
-        password_hash: hashPassword(password),
-        role: role,
-        site_id: defaultSite?.id || null,
-      })
-      .select("id, full_name, email, role")
-      .single();
-
-    if (insertError || !newUser) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: insertError?.message || "Registration failed.",
-        },
-        { status: 500 }
       );
     }
 
     const sessionData = {
       id: newUser.id,
-      username: newUser.full_name,
+      username: newUser.username,
       email: newUser.email,
       role: newUser.role,
     };
 
     const response = NextResponse.json({
       success: true,
-      message: "Account created successfully!",
+      message: `Account created successfully! Welcome, ${newUser.username}.`,
       user: {
         id: newUser.id,
-        username: newUser.full_name,
+        username: newUser.username,
         email: newUser.email,
         role: String(newUser.role).toUpperCase(),
       },
@@ -133,18 +103,18 @@ export async function POST(request: NextRequest) {
 
     response.cookies.set("tubigloop_session", JSON.stringify(sessionData), {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: false, // allow http over LAN/hotspot
       path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
     return response;
-  } catch (err: unknown) {
+  } catch (error: any) {
     return NextResponse.json(
       {
         success: false,
-        message: err instanceof Error ? err.message : "Registration error.",
+        message: error?.message || "Server error while registering account.",
       },
       { status: 500 }
     );

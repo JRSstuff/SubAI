@@ -7,7 +7,7 @@
 const KNOWN_CDO_ZONES = [
   { name: "USTP Engineering Drain, C.M. Recto Ave", lat: 8.4856, lng: 124.6562 },
   { name: "Limketkai Bitan-ag Creek, Lapasan", lat: 8.4835, lng: 124.6580 },
-  { name: "Science Complex, USTP Campus", lat: 8.4862, lng: 124.6569 },
+  { name: "Science Complex, C.M. Recto Ave", lat: 8.4862, lng: 124.6569 },
   { name: "C.M. Recto Ave Overpass, Lapasan", lat: 8.4850, lng: 124.6530 },
   { name: "Cogon Public Market, J.R. Borja St", lat: 8.4770, lng: 124.6495 },
   { name: "Plaza Divisoria, R.N. Abejuela St", lat: 8.4784, lng: 124.6439 },

@@ -1,0 +1,208 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: userId (matches request.auth.uid)
+// Fields:
+//   - full_name: string (required)
+//   - email: string (required)
+//   - role: string (required, 'reporter' | 'reviewer' | 'collector' | 'recycler' | 'admin')
+//   - site_id: string (optional)
+//   - created_at: string/timestamp (optional)
+//   - updated_at: string/timestamp (optional)
+//
+// Collection: reports
+// Document ID: auto-generated or custom reportId
+// Fields:
+//   - reference_no: string (required)
+//   - site_id: string (optional)
+//   - reporter_id: string (optional)
+//   - reporter_name: string (optional)
+//   - location_name: string (required)
+//   - latitude: number (required)
+//   - longitude: number (required)
+//   - description: string (required)
+//   - photo_url: string (required)
+//   - review_state: string (required, 'Submitted' | 'Needs inspection' | 'Verified' | 'Rejected' | 'Duplicate')
+//   - reviewer_id: string (optional)
+//   - review_notes: string (optional)
+//   - duplicate_of_id: string (optional)
+//   - dataset_origin: string (optional)
+//   - created_at: string/timestamp (optional)
+//
+// Collection: cleanup_tasks
+// Document ID: auto-generated taskId
+// Fields:
+//   - report_id: string (required)
+//   - assignee_id: string (optional)
+//   - state: string (required, 'Planned' | 'Assigned' | 'In progress' | 'Collected' | 'Awaiting disposition' | 'Closed')
+//   - priority_score: int/number (required, 0 to 5)
+//   - priority_band: string (required, 'Low' | 'Medium' | 'High')
+//   - obstruction_score: int/number (optional)
+//   - disruption_score: int/number (optional)
+//   - priority_reason: string (optional)
+//
+// Collection: collection_batches
+// Document ID: auto-generated batchId
+// Fields:
+//   - task_id: string (required)
+//   - collector_id: string (optional)
+//   - material_category: string (required)
+//   - measured_kg: number (required, >= 0)
+//   - measurement_basis: string (required)
+//   - before_photo_url: string (optional)
+//   - after_photo_url: string (optional)
+//
+// Collection: handovers
+// Document ID: auto-generated handoverId
+// Fields:
+//   - batch_id: string (required)
+//   - recipient_org: string (required)
+//   - submitted_kg: number (required, >= 0)
+//   - accepted_kg: number (required, >= 0)
+//   - confirmation_state: string (required, 'pending' | 'confirmed' | 'rejected')
+//   - evidence_url: string (optional)
+//
+// Collection: sites
+// Document ID: siteId
+// Fields:
+//   - name: string (required)
+//   - code: string (required)
+//   - latitude: number (required)
+//   - longitude: number (required)
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        getUserData().role == role;
+    }
+
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    function isReviewer() {
+      return hasRole('reviewer') || isAdmin();
+    }
+
+    function isCollector() {
+      return hasRole('collector') || isAdmin();
+    }
+
+    function isRecycler() {
+      return hasRole('recycler') || isAdmin();
+    }
+
+    // Validator functions
+    function isValidUser(data) {
+      return data.keys().hasAll(['full_name', 'email', 'role']) &&
+             data.full_name is string && data.full_name.size() > 0 &&
+             data.email is string && data.email.size() > 0 &&
+             data.role in ['reporter', 'reviewer', 'collector', 'recycler', 'admin'];
+    }
+
+    function isValidReport(data) {
+      return data.keys().hasAll(['reference_no', 'location_name', 'latitude', 'longitude', 'description', 'photo_url']) &&
+             data.reference_no is string &&
+             data.location_name is string &&
+             data.latitude is number &&
+             data.longitude is number &&
+             data.description is string &&
+             data.photo_url is string;
+    }
+
+    function isValidCleanupTask(data) {
+      return data.keys().hasAll(['report_id', 'state', 'priority_score']) &&
+             data.report_id is string &&
+             data.state is string &&
+             data.priority_score is number && data.priority_score >= 0 && data.priority_score <= 5;
+    }
+
+    function isValidCollectionBatch(data) {
+      return data.keys().hasAll(['task_id', 'material_category', 'measured_kg']) &&
+             data.task_id is string &&
+             data.material_category is string &&
+             data.measured_kg is number && data.measured_kg >= 0;
+    }
+
+    function isValidHandover(data) {
+      return data.keys().hasAll(['batch_id', 'recipient_org', 'submitted_kg', 'accepted_kg']) &&
+             data.batch_id is string &&
+             data.recipient_org is string &&
+             data.submitted_kg is number && data.submitted_kg >= 0 &&
+             data.accepted_kg is number && data.accepted_kg >= 0 &&
+             data.accepted_kg <= data.submitted_kg;
+    }
+
+    // 1. Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (request.auth.uid == userId || isAdmin()) && isValidUser(request.resource.data);
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin()) && isValidUser(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 2. Reports collection
+    match /reports/{reportId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidReport(request.resource.data);
+      allow update: if isReviewer() || (isAuthenticated() && resource.data.reporter_id == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // 3. Cleanup tasks collection
+    match /cleanup_tasks/{taskId} {
+      allow read: if isAuthenticated();
+      allow create: if isReviewer() && isValidCleanupTask(request.resource.data);
+      allow update: if (isReviewer() || isCollector()) && isValidCleanupTask(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 4. Collection batches collection
+    match /collection_batches/{batchId} {
+      allow read: if isAuthenticated();
+      allow create: if isCollector() && isValidCollectionBatch(request.resource.data);
+      allow update: if isCollector() && isValidCollectionBatch(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 5. Handovers collection
+    match /handovers/{handoverId} {
+      allow read: if isAuthenticated();
+      allow create: if (isCollector() || isRecycler()) && isValidHandover(request.resource.data);
+      allow update: if isRecycler() && isValidHandover(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 6. Sites collection
+    match /sites/{siteId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}

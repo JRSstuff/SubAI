@@ -80,7 +80,7 @@ export default function AdminPage() {
         setUsers(data.users);
       }
     } catch {
-      setFeedback({ success: false, message: "Failed to load campus users list." });
+      setFeedback({ success: false, message: "Failed to load users list." });
     }
     setIsLoading(false);
   };
@@ -160,7 +160,7 @@ export default function AdminPage() {
               Administrator Access Required
             </h2>
             <p className="text-xs text-[#64748B]">
-              Role assignment and administrative governance are restricted to campus administrators. You are currently logged in as{" "}
+              Role assignment and administrative governance are restricted to system administrators. You are currently logged in as{" "}
               <strong className="text-[#0F172A] uppercase">{currentUser?.role || "GUEST"}</strong>.
             </p>
             <Link
@@ -212,7 +212,7 @@ export default function AdminPage() {
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#0F172A] text-white flex items-center gap-1.5">
                 <Crown className="w-3.5 h-3.5 text-[#92EEFF]" />
-                Campus Governance
+                System Governance
               </span>
               <span className="text-xs text-[#64748B] font-medium">RBAC Administration</span>
             </div>
@@ -413,11 +413,11 @@ export default function AdminPage() {
                       onChange={(e) => handleRoleChange(u.id, e.target.value)}
                       className="h-9 px-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-xs font-bold text-[#0F172A] focus:border-[#30AFFF] focus:outline-none cursor-pointer"
                     >
-                      <option value="reporter">Campus Reporter</option>
+                      <option value="reporter">Community Reporter</option>
                       <option value="reviewer">Reviewer & Dispatch</option>
                       <option value="collector">Authorized Collector</option>
                       <option value="recycler">Partner Recycler</option>
-                      <option value="admin">Campus Administrator</option>
+                      <option value="admin">System Administrator</option>
                     </select>
 
                     {currentRole !== "admin" && (
@@ -472,7 +472,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold text-[#475569]">Campus Email</label>
+                  <label className="text-[11px] font-bold text-[#475569]">Email Address</label>
                   <input
                     type="email"
                     required
@@ -500,11 +500,11 @@ export default function AdminPage() {
                     onChange={(e) => setNewRole(e.target.value)}
                     className="w-full h-11 px-3 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs font-bold text-[#0F172A] focus:bg-white focus:border-[#30AFFF] focus:outline-none"
                   >
-                    <option value="reporter">Campus Reporter</option>
+                    <option value="reporter">Community Reporter</option>
                     <option value="reviewer">Reviewer & Dispatch</option>
                     <option value="collector">Authorized Collector</option>
                     <option value="recycler">Partner Recycler</option>
-                    <option value="admin">Campus Administrator</option>
+                    <option value="admin">System Administrator</option>
                   </select>
                 </div>
 

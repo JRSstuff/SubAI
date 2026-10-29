@@ -1,22 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import crypto from "crypto";
-
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://cvfaethiloimouyxbanb.supabase.co";
-
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "sb_publishable_CDDcZdQiIZS8pJPAp1J4yw_L9ABd4k7";
-
-function hashPassword(password: string): string {
-  const salt = crypto.randomBytes(16).toString("hex");
-  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
-  return `${salt}:${hash}`;
-}
+import { getFirestoreUsers, updateFirestoreUserRole } from "@/lib/firebase/firestore";
+import { registerWithFirebase } from "@/lib/firebase/auth";
 
 const VALID_ROLES = ["reporter", "reviewer", "collector", "recycler", "admin"];
 
@@ -51,29 +35,25 @@ async function updateUserRole(userId: string, rawRole: string) {
     };
   }
 
-  const supabase = createClient(supabaseUrl, supabaseKey);
-  const { data: updatedUser, error } = await supabase
-    .from("app_users")
-    .update({ role })
-    .eq("id", userId)
-    .select("id, full_name, email, role")
-    .single();
-
-  if (error) {
-    return { status: 500, res: { success: false, message: error.message } };
+  try {
+    await updateFirestoreUserRole(userId, role);
+    return {
+      status: 200,
+      res: {
+        success: true,
+        message: `Role updated to '${role}' in Firestore!`,
+        user: { id: userId, role },
+      },
+    };
+  } catch (err: any) {
+    return {
+      status: 500,
+      res: { success: false, message: err?.message || "Failed to update role in Firestore." },
+    };
   }
-
-  return {
-    status: 200,
-    res: {
-      success: true,
-      message: `Role updated to '${role}' for ${updatedUser.full_name}!`,
-      user: updatedUser,
-    },
-  };
 }
 
-// 1. GET: List all users
+// 1. GET: List all users from Firestore
 export async function GET(request: NextRequest) {
   try {
     const isAdmin = verifyAdminSession(request);
@@ -84,23 +64,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    const { data: users, error } = await supabase
-      .from("app_users")
-      .select("id, full_name, email, role, created_at")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      return NextResponse.json(
-        { success: false, message: error.message },
-        { status: 500 }
-      );
-    }
-
+    const users = await getFirestoreUsers();
     return NextResponse.json({ success: true, users: users || [] });
   } catch (err: unknown) {
     return NextResponse.json(
-      { success: false, message: err instanceof Error ? err.message : "Error fetching users." },
+      { success: false, message: err instanceof Error ? err.message : "Error fetching users from Firestore." },
       { status: 500 }
     );
   }
@@ -149,8 +117,9 @@ export async function POST(request: NextRequest) {
 
     const fullName = (body.fullName || "").trim();
     const email = (body.email || "").trim().toLowerCase();
-    const password = body.password || "tubigloop123";
-    const role = (body.role || "reporter").trim().toLowerCase();
+    const password = body.password || "";
+    const rawRole = (body.role || "reporter").toLowerCase();
+    const role = VALID_ROLES.includes(rawRole) ? rawRole : "reporter";
 
     if (!fullName || fullName.length < 3) {
       return NextResponse.json(
@@ -161,63 +130,33 @@ export async function POST(request: NextRequest) {
 
     if (!email || !email.includes("@")) {
       return NextResponse.json(
-        { success: false, message: "Valid email is required." },
+        { success: false, message: "Please provide a valid email." },
         { status: 400 }
       );
     }
 
-    if (!VALID_ROLES.includes(role)) {
+    if (!password || password.length < 6) {
       return NextResponse.json(
-        { success: false, message: "Invalid role assigned." },
+        { success: false, message: "Password must be at least 6 characters." },
         { status: 400 }
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Check if email already registered
-    const { data: existing } = await supabase
-      .from("app_users")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle();
-
-    if (existing) {
-      return NextResponse.json(
-        { success: false, message: "A user with this email already exists." },
-        { status: 400 }
-      );
-    }
-
-    const { data: site } = await supabase.from("sites").select("id").limit(1).maybeSingle();
-
-    const { data: newUser, error: insertError } = await supabase
-      .from("app_users")
-      .insert({
-        full_name: fullName,
-        email: email,
-        password_hash: hashPassword(password),
-        role: role,
-        site_id: site?.id || null,
-      })
-      .select("id, full_name, email, role")
-      .single();
-
-    if (insertError) {
-      return NextResponse.json(
-        { success: false, message: insertError.message },
-        { status: 500 }
-      );
-    }
+    const newUser = await registerWithFirebase(fullName, email, password, role);
 
     return NextResponse.json({
       success: true,
-      message: `User ${newUser.full_name} created as ${newUser.role}!`,
-      user: newUser,
+      message: `User '${fullName}' successfully created with role '${role}' in Firebase!`,
+      user: {
+        id: newUser.id,
+        full_name: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+      },
     });
   } catch (err: unknown) {
     return NextResponse.json(
-      { success: false, message: err instanceof Error ? err.message : "Error creating user." },
+      { success: false, message: err instanceof Error ? err.message : "Error creating user in Firebase." },
       { status: 500 }
     );
   }

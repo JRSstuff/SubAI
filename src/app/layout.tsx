@@ -2,11 +2,20 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TubigLoop - Water Container & Recycling Management",
-  description: "Coordinating information, assignments, and evidence for water maintenance and recycling partners.",
+  title: "TubigLoop CDO - Urban Drainage Triage & Circular Waste Recovery",
+  description: "Coordinating photographic obstruction reports, AI material categorization, priority dispatch, and verified circular recovery for Cagayan de Oro City.",
   icons: {
-    icon: "/TubigLoopLogo150x150.png",
-    apple: "/TubigLoopLogo150x150.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+      { url: "/icon-192x192.png", type: "image/png", sizes: "192x192" },
+      { url: "/logo512x512.png", type: "image/png", sizes: "512x512" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/apple-icon.png", sizes: "192x192", type: "image/png" },
+      { url: "/logo512x512.png", sizes: "512x512", type: "image/png" },
+    ],
   },
   manifest: "/manifest.json",
 };

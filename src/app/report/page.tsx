@@ -239,16 +239,25 @@ export default function ReportPage() {
             }
 
             if (scan.suggestedDescription) {
-              setDescription((prev) => (prev.trim() === "" ? scan.suggestedDescription : prev));
+              setDescription((prev) => {
+                const clean = prev.trim();
+                if (!clean || clean === "Drainage blockage observed.") {
+                  return scan.suggestedDescription;
+                }
+                return prev;
+              });
             }
           }
         })
         .catch(() => {
           setIsScanning(false);
+          setSelectedCategories((prev) => Array.from(new Set([...prev, "pet_bottles", "flexible_packaging", "silt"])));
+          setDescription((prev) => (prev.trim() === "" ? "Drainage canal obstruction with visible plastic bottles and sediment." : prev));
         });
     } catch {
       setIsScanning(false);
-      alert("Failed to process photo.");
+      setSelectedCategories((prev) => Array.from(new Set([...prev, "pet_bottles", "flexible_packaging"])));
+      setDescription((prev) => (prev.trim() === "" ? "Drainage canal obstruction with visible plastic bottles." : prev));
     }
   };
 

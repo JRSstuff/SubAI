@@ -59,11 +59,30 @@ export default function ReviewPage() {
 
   const loadReports = async () => {
     setIsLoading(true);
-    const res = await getReportsAction();
-    if (res.success && res.data) {
-      setReports(res.data as any[]);
+    try {
+      const apiRes = await fetch("/api/reports");
+      if (apiRes.ok) {
+        const json = await apiRes.json();
+        if (Array.isArray(json?.data)) {
+          setReports(json.data);
+          setIsLoading(false);
+          return;
+        }
+      }
+    } catch {
+      // fallback
     }
-    setIsLoading(false);
+
+    try {
+      const res = await getReportsAction();
+      if (res?.success && Array.isArray(res?.data)) {
+        setReports(res.data as any[]);
+      }
+    } catch (err) {
+      console.warn("Could not load reports:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {

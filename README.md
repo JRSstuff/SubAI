@@ -50,7 +50,8 @@ TubigLoop CDO is a mobile-first Progressive Web App (PWA) designed to mitigate u
 | **Framework** | [Next.js 16.4.2](https://nextjs.org/) | App Router, Turbopack, Server Actions, & Route Handlers |
 | **Runtime & UI** | [React 19.3.0](https://react.dev/) / TypeScript 5 | Modern React with Server Components and Hooks |
 | **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) | Flat solid color tokens, strictly zero gradients |
-| **Database & Auth** | [Supabase Postgres](https://supabase.com/) | Real-time Postgres database, Row Level Security (RLS), and session cookie auth via `@supabase/ssr` |
+| **Database** | [Cloud Firestore](https://firebase.google.com/docs/firestore) | Real-time NoSQL document database with strict security rules |
+| **Authentication** | [Firebase Auth](https://firebase.google.com/docs/auth) | Email & password authentication with RBAC user profiles |
 | **AI Vision Engine** | [Google Gemini API](https://ai.google.dev/) | `gemini-3.5-flash-lite` & `gemini-flash-lite-latest` fast-cascade with 6s timeout and structured JSON mode |
 | **Mapping & GIS** | [Leaflet 1.9.4](https://leafletjs.com/) | OpenStreetMap raster tiles, custom SVG markers, and automated Nominatim reverse geocoding |
 | **Icon Pack** | [Lucide React 1.61.0](https://lucide.dev/) | Consistent, accessible iconography |
@@ -115,13 +116,15 @@ TubigLoop/
 │   │   ├── auth/              # Role-tabbed login/register cards
 │   │   ├── layout/            # Navbar, mobile capsule, and desktop header
 │   │   └── map/               # Leaflet map container with GPS & pinning
-│   ├── lib/
-│   │   ├── cdo-geocode.ts     # OpenStreetMap Nominatim reverse geocoder
-│   │   ├── gemini.ts          # Gemini Flash Lite multimodal vision cascade
-│   │   └── image-compress.ts  # Client-side canvas image downscaling
-│   └── utils/
-│       └── supabase/          # Supabase browser, server, and cookie clients
-├── supabase/                  # Database migration scripts & RLS policies
+│   └── lib/
+│       ├── cdo-geocode.ts     # OpenStreetMap Nominatim reverse geocoder
+│       ├── firebase/          # Firebase Auth, Firestore client & services
+│       ├── gemini.ts          # Gemini Flash Lite multimodal vision cascade
+│       └── image-compress.ts  # Client-side canvas image downscaling
+├── firebase.json              # Firebase Auth & Firestore rules configuration
+├── firestore.rules            # Firestore security rules and role validators
+├── firestore.indexes.json     # Firestore database index definitions
+├── .firebaserc                # Active project link (flowloop-f621b)
 ├── next.config.ts             # Next.js 16 configuration
 └── package.json               # Dependencies & build scripts
 ```
@@ -133,7 +136,7 @@ TubigLoop/
 ### Prerequisites
 - Node.js 20+ (Node.js 24 recommended)
 - npm 10+
-- A Supabase project with database tables configured
+- A Firebase project (`flowloop-f621b`) with Authentication (Email/Password) and Cloud Firestore enabled
 - A Google Gemini API key from [Google AI Studio](https://aistudio.google.com/)
 
 ### Installation
@@ -151,8 +154,16 @@ TubigLoop/
 
 3. Configure environment variables in `.env.local`:
    ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   # Firebase Configuration
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=flowloop-f621b.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=flowloop-f621b
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=flowloop-f621b.firebasestorage.app
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+   NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+
+   # Google Gemini API Key
    GEMINI_API_KEY=your_google_ai_studio_api_key
    ```
 

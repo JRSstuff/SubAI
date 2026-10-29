@@ -13,8 +13,8 @@ export default function Home() {
         <div className="flex items-center gap-3">
           <div className="relative w-36 h-10">
             <Image
-              src="/TubigLoopLogoWithText.png"
-              alt="TubigLoop Brand"
+              src="/LogoWithText.png"
+              alt="SubAI Brand"
               fill
               sizes="144px"
               priority

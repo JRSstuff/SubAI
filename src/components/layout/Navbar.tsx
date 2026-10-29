@@ -60,26 +60,42 @@ export function Navbar({ currentUser, onLogout }: NavbarProps) {
   const [user, setUser] = useState(currentUser || null);
 
   useEffect(() => {
-    if (!currentUser) {
-      fetch("/api/auth/me")
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.authenticated && data?.user) {
-            setUser(data.user);
-          } else {
-            getCurrentUserAction().then((u) => {
-              if (u) setUser(u);
-            });
-          }
-        })
-        .catch(() => {
-          getCurrentUserAction().then((u) => {
-            if (u) setUser(u);
-          });
-        });
-    } else {
+    if (currentUser) {
       setUser(currentUser);
+      return;
     }
+
+    let isMounted = true;
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted) return;
+        if (data?.authenticated && data?.user) {
+          setUser(data.user);
+        } else {
+          getCurrentUserAction()
+            .then((u) => {
+              if (isMounted && u) setUser(u);
+            })
+            .catch(() => {
+              // Silently ignore network/action failure
+            });
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        getCurrentUserAction()
+          .then((u) => {
+            if (isMounted && u) setUser(u);
+          })
+          .catch(() => {
+            // Silently ignore network/action failure
+          });
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [currentUser]);
 
   // Role Boundary Protection: Check if user has permission for the active path
@@ -165,8 +181,8 @@ export function Navbar({ currentUser, onLogout }: NavbarProps) {
         <div className="flex items-center gap-6">
           <Link href={ROLE_HOME_ROUTE[roleKey] || "/report"} className="relative w-36 h-9 shrink-0">
             <Image
-              src="/TubigLoopLogoWithText.png"
-              alt="TubigLoop"
+              src="/LogoWithText.png"
+              alt="SubAI"
               fill
               priority
               sizes="144px"
@@ -209,7 +225,7 @@ export function Navbar({ currentUser, onLogout }: NavbarProps) {
             </div>
             <div className="flex flex-col text-left">
               <span className="font-bold text-[#0F172A] leading-tight truncate max-w-[130px]">
-                {user?.username || "Campus Pilot User"}
+                {user?.username || "TubigLoop User"}
               </span>
               <span className="text-[10px] text-[#30AFFF] font-extrabold uppercase tracking-wider">
                 {user?.role || "REPORTER"}
@@ -232,8 +248,8 @@ export function Navbar({ currentUser, onLogout }: NavbarProps) {
       <header className="md:hidden sticky top-0 z-40 w-full h-14 bg-white/95 backdrop-blur-md border-b border-[#E2E8F0] px-4 flex items-center justify-between">
         <Link href={ROLE_HOME_ROUTE[roleKey] || "/report"} className="relative w-28 h-7 shrink-0">
           <Image
-            src="/TubigLoopLogoWithText.png"
-            alt="TubigLoop"
+            src="/LogoWithText.png"
+            alt="SubAI"
             fill
             priority
             sizes="112px"

@@ -1,7 +1,14 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
+import {
+  submitFirestoreReport,
+  getFirestoreReports,
+  triageFirestoreReport,
+  recordFirestoreCollection,
+  recordFirestoreHandover,
+  getFirestoreMassBalanceMetrics,
+} from "@/lib/firebase/firestore";
 
 export interface ActionResult<T = unknown> {
   success: boolean;
@@ -11,7 +18,7 @@ export interface ActionResult<T = unknown> {
 }
 
 /**
- * 1. Submit Drainage Obstruction Report (Reporter)
+ * 1. Submit Drainage Obstruction Report (Reporter) via Firestore
  */
 export async function submitReportAction(formData: FormData): Promise<ActionResult> {
   const locationName = formData.get("locationName")?.toString().trim();
@@ -42,9 +49,6 @@ export async function submitReportAction(formData: FormData): Promise<ActionResu
 
   try {
     const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-
-    // Extract logged in user ID if present in session
     let userId: string | null = null;
     const sessionCookie = cookieStore.get("tubigloop_session")?.value;
     if (sessionCookie) {
@@ -56,113 +60,36 @@ export async function submitReportAction(formData: FormData): Promise<ActionResu
       }
     }
 
-    // Fetch site ID
-    const { data: site } = await supabase.from("sites").select("id").limit(1).maybeSingle();
-
-    // Generate unique reference
-    const timestampRef = Math.floor(1000 + Math.random() * 9000);
-    const referenceNo = `TL-${new Date().getFullYear()}-${timestampRef}`;
-
-    // Base report payload
-    const reportPayload: Record<string, unknown> = {
-      reference_no: referenceNo,
-      site_id: site?.id || null,
-      reporter_name: reporterName,
-      location_name: locationName,
-      latitude: latitude,
-      longitude: longitude,
-      description: description,
-      photo_url: photoBase64,
-      review_state: "Submitted",
-      dataset_origin: "pilot",
-    };
-
-    // Insert into reports (attempt with reporter_id if logged in, fallback gracefully if stale foreign key constraint exists)
-    let { data: newReport, error: reportErr } = await supabase
-      .from("reports")
-      .insert(userId ? { ...reportPayload, reporter_id: userId } : reportPayload)
-      .select()
-      .single();
-
-    // Auto-fallback: If reporter_id foreign key constraint is violated (e.g. references auth.users), retry with reporter_id = null
-    if (reportErr && (reportErr.message?.includes("reporter_id") || reportErr.code === "23503")) {
-      const retry = await supabase
-        .from("reports")
-        .insert(reportPayload)
-        .select()
-        .single();
-      newReport = retry.data;
-      reportErr = retry.error;
-    }
-
-    if (reportErr || !newReport) {
-      return {
-        success: false,
-        message: reportErr?.message || "Failed to save report to database.",
-      };
-    }
-
-    const severity = formData.get("severity")?.toString() || "partial";
-    const obstructionScore = severity === "substantial" ? 3 : severity === "partial" ? 2 : 1;
-    const priorityBand = severity === "substantial" ? "High" : severity === "partial" ? "Medium" : "Low";
-    const priorityScore = severity === "substantial" ? 4 : severity === "partial" ? 2 : 1;
-
-    // Auto-create initial planned cleanup task
-    await supabase.from("cleanup_tasks").insert({
-      report_id: newReport.id,
-      state: "Planned",
-      priority_score: priorityScore,
-      priority_band: priorityBand,
-      obstruction_score: obstructionScore,
-      disruption_score: 1,
-      priority_reason: `Initial submission (${severity}${classification ? ` - ${classification}` : ""}) pending triage.`,
+    const { report } = await submitFirestoreReport({
+      locationName,
+      latitude,
+      longitude,
+      description,
+      photoBase64,
+      reporterName,
+      reporterId: userId,
+      aiCategories: aiCategoriesJson,
     });
-
-    // Record AI analysis if provided
-    try {
-      const parsedCategories = JSON.parse(aiCategoriesJson);
-      if (Array.isArray(parsedCategories) && parsedCategories.length > 0) {
-        await supabase.from("ai_analyses").insert({
-          report_id: newReport.id,
-          photo_url: "stored_base64",
-          suggested_categories: parsedCategories,
-          confidence_score: 0.92,
-        });
-      }
-    } catch {
-      // Non-blocking
-    }
 
     return {
       success: true,
-      message: `Report ${referenceNo} verified and submitted successfully!`,
-      data: newReport,
+      message: `Report submitted successfully! Ref: ${report.reference_no}`,
+      data: report,
     };
   } catch (err: unknown) {
     return {
       success: false,
-      message: err instanceof Error ? err.message : "Submission failed. Please try again.",
+      message: err instanceof Error ? err.message : "Failed to record report in Firestore.",
     };
   }
 }
 
 /**
- * 2. Fetch all reports with coordinates and triage status
+ * 2. Fetch all reports with coordinates and triage status from Firestore
  */
 export async function getReportsAction(): Promise<ActionResult> {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-
-    const { data, error } = await supabase
-      .from("reports")
-      .select("*, cleanup_tasks(*), ai_analyses(*)")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      return { success: false, message: error.message };
-    }
-
+    const data = await getFirestoreReports();
     return {
       success: true,
       message: "Reports loaded successfully.",
@@ -171,13 +98,13 @@ export async function getReportsAction(): Promise<ActionResult> {
   } catch (err: unknown) {
     return {
       success: false,
-      message: err instanceof Error ? err.message : "Failed to load reports.",
+      message: err instanceof Error ? err.message : "Failed to load reports from Firestore.",
     };
   }
 }
 
 /**
- * 3. Triage & Dispatch Report (Reviewer)
+ * 3. Triage & Dispatch Report (Reviewer) in Firestore
  * Transparent Priority Calculation (0 to 5)
  */
 export async function triageReportAction(
@@ -190,63 +117,31 @@ export async function triageReportAction(
   reviewNotes?: string
 ): Promise<ActionResult> {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-
-    // Calculate priority score (0-5)
-    const obstruction = Math.min(Math.max(Number(obstructionScore) || 0, 0), 2);
-    const disruption = Math.min(Math.max(Number(disruptionScore) || 0, 0), 2);
-    const totalScore = obstruction + disruption; // 0 to 4 (+1 if >48 hours)
-    let priorityBand: "Low" | "Medium" | "High" = "Medium";
-    if (totalScore <= 1) priorityBand = "Low";
-    else if (totalScore >= 4) priorityBand = "High";
-
-    // Update Report State
-    const { error: repErr } = await supabase
-      .from("reports")
-      .update({
-        review_state: reviewState,
-        review_notes: reviewNotes || `Triage completed as ${reviewState}.`,
-        reviewed_at: new Date().toISOString(),
-      })
-      .eq("id", reportId);
-
-    if (repErr) {
-      return { success: false, message: repErr.message };
-    }
-
-    // Update or Insert Cleanup Task
-    if (reviewState === "Verified") {
-      await supabase
-        .from("cleanup_tasks")
-        .update({
-          state: "Assigned",
-          priority_score: totalScore,
-          priority_band: priorityBand,
-          obstruction_score: obstruction,
-          disruption_score: disruption,
-          priority_reason: `Score ${totalScore}/5 (${priorityBand}): Obstruction=${obstruction}, Disruption=${disruption}. Assigned to ${
-            assigneeName || "Campus Maintenance Team"
-          }.`,
-          target_date: targetDate || null,
-        })
-        .eq("report_id", reportId);
-    }
+    const result = await triageFirestoreReport(
+      reportId,
+      reviewState,
+      obstructionScore,
+      disruptionScore,
+      assigneeName,
+      targetDate,
+      reviewNotes
+    );
 
     return {
       success: true,
-      message: `Report updated to ${reviewState} with ${priorityBand} priority!`,
+      message: `Report updated to ${reviewState} with ${result.priorityBand} priority!`,
+      data: result,
     };
   } catch (err: unknown) {
     return {
       success: false,
-      message: err instanceof Error ? err.message : "Triage operation failed.",
+      message: err instanceof Error ? err.message : "Triage operation failed in Firestore.",
     };
   }
 }
 
 /**
- * 4. Record Collection Batches & Photo Evidence (Collector)
+ * 4. Record Collection Batches & Photo Evidence (Collector) in Firestore
  */
 export async function recordCollectionAction(
   taskId: string,
@@ -258,46 +153,22 @@ export async function recordCollectionAction(
   afterPhotoBase64?: string
 ): Promise<ActionResult> {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-
-    for (const b of batches) {
-      if (b.kg > 0) {
-        await supabase.from("collection_batches").insert({
-          task_id: taskId,
-          material_category: b.category,
-          measured_kg: b.kg,
-          measurement_basis: "scale_weighed",
-          before_photo_url: beforePhotoBase64 || null,
-          after_photo_url: afterPhotoBase64 || null,
-          dataset_origin: "pilot",
-        });
-      }
-    }
-
-    // Advance task status to Collected
-    await supabase
-      .from("cleanup_tasks")
-      .update({
-        state: "Collected",
-        completed_at: new Date().toISOString(),
-      })
-      .eq("id", taskId);
+    await recordFirestoreCollection(taskId, batches, beforePhotoBase64, afterPhotoBase64);
 
     return {
       success: true,
-      message: "Cleanup evidence & weighed material batches recorded successfully!",
+      message: "Cleanup evidence & weighed material batches recorded successfully in Firestore!",
     };
   } catch (err: unknown) {
     return {
       success: false,
-      message: err instanceof Error ? err.message : "Collection logging failed.",
+      message: err instanceof Error ? err.message : "Collection logging failed in Firestore.",
     };
   }
 }
 
 /**
- * 5. Record Recipient Handover (Collector / Recycler)
+ * 5. Record Recipient Handover (Collector / Recycler) in Firestore
  */
 export async function recordHandoverAction(
   batchId: string,
@@ -306,35 +177,19 @@ export async function recordHandoverAction(
   acceptedKg: number,
   evidencePhotoBase64?: string
 ): Promise<ActionResult> {
-  if (acceptedKg > submittedKg) {
-    return {
-      success: false,
-      message: "Accepted weight cannot exceed submitted batch weight.",
-    };
-  }
-
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-
-    const { data, error } = await supabase.from("handovers").insert({
-      batch_id: batchId,
-      recipient_org: recipientOrg,
-      submitted_kg: submittedKg,
-      accepted_kg: acceptedKg,
-      confirmation_state: "confirmed",
-      evidence_url: evidencePhotoBase64 || null,
-      confirmed_at: new Date().toISOString(),
-    });
-
-    if (error) {
-      return { success: false, message: error.message };
-    }
+    const result = await recordFirestoreHandover(
+      batchId,
+      recipientOrg,
+      submittedKg,
+      acceptedKg,
+      evidencePhotoBase64
+    );
 
     return {
       success: true,
-      message: `Handover of ${acceptedKg} kg to ${recipientOrg} confirmed!`,
-      data,
+      message: `Handover of ${acceptedKg} kg to ${recipientOrg} confirmed in Firestore!`,
+      data: result,
     };
   } catch (err: unknown) {
     return {
@@ -345,69 +200,20 @@ export async function recordHandoverAction(
 }
 
 /**
- * 6. Get Reconciled Mass Balance for Impact Dashboard
+ * 6. Get Reconciled Mass Balance for Impact Dashboard from Firestore
  */
 export async function getMassBalanceMetricsAction(): Promise<ActionResult> {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-
-    // Fetch collection batches
-    const { data: batches } = await supabase.from("collection_batches").select("*");
-
-    // Fetch handovers
-    const { data: handovers } = await supabase.from("handovers").select("*");
-
-    // Fetch reports
-    const { data: reports } = await supabase.from("reports").select("id, review_state");
-
-    let totalCollected = 0;
-    let petBottlesKg = 0;
-    let flexiblePackagingKg = 0;
-    let residualKg = 0;
-    let siltKg = 0;
-
-    (batches || []).forEach((b: any) => {
-      const kg = Number(b.measured_kg) || 0;
-      totalCollected += kg;
-      if (b.material_category === "pet_bottles") petBottlesKg += kg;
-      else if (b.material_category === "flexible_packaging") flexiblePackagingKg += kg;
-      else if (b.material_category === "residual_waste") residualKg += kg;
-      else if (b.material_category === "silt") siltKg += kg;
-    });
-
-    let acceptedForRecycling = 0;
-    (handovers || []).forEach((h: any) => {
-      if (h.confirmation_state === "confirmed") {
-        acceptedForRecycling += Number(h.accepted_kg) || 0;
-      }
-    });
-
-    const eligibleRecyclable = petBottlesKg + flexiblePackagingKg;
-    const awaitingHandover = Math.max(0, eligibleRecyclable - acceptedForRecycling);
-
-    const verifiedCount = (reports || []).filter((r) => r.review_state === "Verified").length;
-    const totalReportsCount = (reports || []).length;
-
+    const metrics = await getFirestoreMassBalanceMetrics();
     return {
       success: true,
-      message: "Metrics calculated successfully.",
-      data: {
-        totalCollectedKg: Number(totalCollected.toFixed(2)),
-        acceptedForRecyclingKg: Number(acceptedForRecycling.toFixed(2)),
-        awaitingHandoverKg: Number(awaitingHandover.toFixed(2)),
-        residualKg: Number(residualKg.toFixed(2)),
-        siltKg: Number(siltKg.toFixed(2)),
-        petBottlesKg: Number(petBottlesKg.toFixed(2)),
-        flexiblePackagingKg: Number(flexiblePackagingKg.toFixed(2)),
-        verifiedReportsCount: verifiedCount,
-        totalReportsCount: totalReportsCount,
-      },
+      message: "Metrics calculated successfully from Firestore.",
+      data: metrics,
     };
   } catch (err: unknown) {
     return {
       success: false,
-      message: err instanceof Error ? err.message : "Failed to load metrics.",
+      message: err instanceof Error ? err.message : "Failed to load metrics from Firestore.",
     };
   }
 }

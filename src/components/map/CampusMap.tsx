@@ -20,6 +20,8 @@ interface CampusMapProps {
   selectable?: boolean;
   selectedCoords?: { lat: number; lng: number } | null;
   onLocationSelect?: (coords: { lat: number; lng: number }) => void;
+  onPinSelect?: (pin: MapReportPin) => void;
+  focusedPinId?: string | null;
   className?: string;
 }
 
@@ -28,12 +30,16 @@ export function CampusMap({
   selectable = false,
   selectedCoords = null,
   onLocationSelect,
+  onPinSelect,
+  focusedPinId = null,
   className = "h-[450px] w-full rounded-2xl",
 }: CampusMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerGroupRef = useRef<any>(null);
   const selectedMarkerRef = useRef<any>(null);
+  const markersByIdRef = useRef<Map<string, any>>(new Map());
+  const lastClickedMarkerIdRef = useRef<string | null>(null);
   const onLocationSelectRef = useRef(onLocationSelect);
 
   // Keep callback ref fresh without triggering effects
@@ -185,6 +191,7 @@ export function CampusMap({
       if (!mapInstanceRef.current || !markerGroupRef.current) return;
       const L = LModule.default;
       markerGroupRef.current.clearLayers();
+      markersByIdRef.current.clear();
 
       pins.forEach((pin) => {
         let pinColor = "#30AFFF"; // Default Tubig Blue
@@ -209,8 +216,15 @@ export function CampusMap({
           popupAnchor: [0, -38],
         });
 
+        const photoHtml = pin.photo_url
+          ? `<div style="width: 100%; height: 110px; border-radius: 10px; overflow: hidden; margin-bottom: 8px; background: #0F172A;">
+               <img src="${pin.photo_url}" alt="${pin.location_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+             </div>`
+          : "";
+
         const popupContent = `
-          <div style="font-family: inherit; min-width: 180px; padding: 4px;">
+          <div style="font-family: inherit; min-width: 220px; max-width: 260px; padding: 2px;">
+            ${photoHtml}
             <div style="font-size: 11px; font-weight: 800; color: #64748B; text-transform: uppercase;">
               ${pin.reference_no} &bull; ${pin.review_state}
             </div>
@@ -219,8 +233,8 @@ export function CampusMap({
             </div>
             ${
               pin.description
-                ? `<div style="font-size: 12px; color: #475569; margin-top: 4px;">${pin.description}</div>`
-                : ""
+                ? `<div style="font-size: 11px; color: #334155; line-height: 1.45; background: #F8FAFC; padding: 6px 8px; border-radius: 8px; border: 1px solid #E2E8F0; margin-top: 6px; word-break: break-word;"><strong style="color: #64748B; font-size: 9px; text-transform: uppercase; display: block; margin-bottom: 2px;">Description:</strong>${pin.description}</div>`
+                : '<div style="font-size: 11px; color: #94A3B8; font-style: italic; margin-top: 4px;">No description provided.</div>'
             }
             <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between;">
               <span style="font-size: 11px; font-weight: 700; background: ${pinColor}20; color: ${pinColor}; padding: 2px 8px; border-radius: 9999px;">
@@ -230,12 +244,50 @@ export function CampusMap({
           </div>
         `;
 
-        L.marker([pin.latitude, pin.longitude], { icon })
-          .bindPopup(popupContent)
+        const marker = L.marker([pin.latitude, pin.longitude], { icon })
+          .bindPopup(popupContent, {
+            maxWidth: 280,
+            minWidth: 220,
+            autoPan: true,
+            autoPanPadding: [20, 20],
+          })
           .addTo(markerGroupRef.current);
+
+        markersByIdRef.current.set(pin.id, marker);
+
+        marker.on("click", () => {
+          lastClickedMarkerIdRef.current = pin.id;
+          if (onPinSelect) onPinSelect(pin);
+        });
       });
     });
-  }, [pins]);
+  }, [pins, onPinSelect]);
+
+  // Pan to focused pin when selected from side list
+  useEffect(() => {
+    if (!focusedPinId || !mapInstanceRef.current || !pins || pins.length === 0) return;
+
+    // If marker was clicked directly on the map, do not trigger map movement that closes the popup
+    if (lastClickedMarkerIdRef.current === focusedPinId) {
+      lastClickedMarkerIdRef.current = null;
+      return;
+    }
+
+    const target = pins.find((p) => p.id === focusedPinId);
+    if (!target) return;
+
+    mapInstanceRef.current.panTo([target.latitude, target.longitude], {
+      animate: true,
+      duration: 0.5,
+    });
+
+    const marker = markersByIdRef.current.get(focusedPinId);
+    if (marker) {
+      setTimeout(() => {
+        marker.openPopup();
+      }, 150);
+    }
+  }, [focusedPinId, pins]);
 
   // Update selected coordinates pin (for report form)
   useEffect(() => {
@@ -338,7 +390,7 @@ export function CampusMap({
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#F8FAFC]/80 backdrop-blur-xs">
           <Loader2 className="w-6 h-6 animate-spin text-[#30AFFF]" />
           <span className="text-xs font-semibold text-[#475569] mt-2">
-            Loading Campus Tiles...
+            Loading Map Tiles...
           </span>
         </div>
       )}
