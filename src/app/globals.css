@@ -104,17 +104,6 @@ body {
   }
 }
 
-@keyframes rippleExpand {
-  0% {
-    transform: scale(0.2);
-    opacity: 0.9;
-  }
-  100% {
-    transform: scale(2.8);
-    opacity: 0;
-  }
-}
-
 .animate-water-wave {
   animation: wave 8s linear infinite;
 }
@@ -137,10 +126,6 @@ body {
 
 .animate-hydro-pulse {
   animation: hydroPulse 2.5s ease-in-out infinite;
-}
-
-.animate-ripple-expand {
-  animation: rippleExpand 0.85s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
 }
 
 @keyframes dash {

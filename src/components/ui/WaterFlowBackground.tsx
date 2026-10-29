@@ -1,13 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
-
-interface ClickRipple {
-  id: number;
-  x: number;
-  y: number;
-}
 
 export function WaterFlowBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -15,41 +9,9 @@ export function WaterFlowBackground() {
   const wave2Ref = useRef<SVGPathElement>(null);
   const wave3Ref = useRef<SVGPathElement>(null);
   const bubbleContainerRef = useRef<HTMLDivElement>(null);
-  const [ripples, setRipples] = useState<ClickRipple[]>([]);
 
   useEffect(() => {
-    // 1. Interactive Click/Tap Water Ripple Effect
-    const handleClick = (e: MouseEvent | TouchEvent) => {
-      let clientX = 0;
-      let clientY = 0;
-
-      if ("touches" in e && e.touches.length > 0) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else if ("clientX" in e) {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
-
-      if (clientX === 0 && clientY === 0) return;
-
-      const newRipple: ClickRipple = {
-        id: Date.now() + Math.random(),
-        x: clientX,
-        y: clientY,
-      };
-
-      setRipples((prev) => [...prev.slice(-6), newRipple]);
-
-      // Remove after animation completes
-      setTimeout(() => {
-        setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
-      }, 1000);
-    };
-
-    window.addEventListener("pointerdown", handleClick, { passive: true });
-
-    // 2. GreenSock (GSAP) Wave & Bubble Physics
+    // GreenSock (GSAP) Wave & Bubble Physics
     const ctx = gsap.context(() => {
       // Wave 1: Rapid Surface Wave (Duration 6s)
       if (wave1Ref.current) {
@@ -104,35 +66,16 @@ export function WaterFlowBackground() {
     }, containerRef);
 
     return () => {
-      window.removeEventListener("pointerdown", handleClick);
       ctx.revert();
     };
   }, []);
 
   return (
-    <>
-      {/* ─── INTERACTIVE WATER RIPPLES ON TAP/CLICK (Elevated to z-50 so they display over all UI!) ─── */}
-      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden select-none">
-        {ripples.map((r) => (
-          <span
-            key={r.id}
-            className="absolute rounded-full border-2 border-[#30AFFF] pointer-events-none animate-ripple-expand"
-            style={{
-              left: r.x - 40,
-              top: r.y - 40,
-              width: 80,
-              height: 80,
-              boxShadow: "0 0 24px rgba(48, 175, 255, 0.7), inset 0 0 16px rgba(146, 238, 255, 0.6)",
-            }}
-          />
-        ))}
-      </div>
-
-      <div
-        ref={containerRef}
-        aria-hidden="true"
-        className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
-      >
+    <div
+      ref={containerRef}
+      aria-hidden="true"
+      className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
+    >
         {/* ─── TOP AMBIENT HYDRO MIST ─── */}
         <div
           className="absolute top-0 left-0 right-0 h-44 pointer-events-none opacity-40"
@@ -277,6 +220,5 @@ export function WaterFlowBackground() {
           <div className="absolute bottom-20 sm:bottom-28 left-0 right-0 h-1.5 bg-linear-to-r from-transparent via-white to-transparent blur-[1px] opacity-80" />
         </div>
       </div>
-    </>
-  );
+    );
 }
