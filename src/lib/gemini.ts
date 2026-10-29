@@ -13,7 +13,6 @@ export interface AIScanResult {
   error?: string;
 }
 
-// Active fast multimodal models verified in Google AI Studio
 const CANDIDATE_MODELS = [
   "gemini-3.6-flash",
   "gemini-3.5-flash",
@@ -28,14 +27,27 @@ export const VALID_DRAINAGE_CLASSIFICATIONS = [
 ] as const;
 
 /**
- * Server Action: Multimodal high-speed vision scan of drainage obstruction photos.
- * Analyzes debris materials (PET bottles, sachets, silt, organic) and automatically
- * classifies the urban drainage infrastructure asset using Google Gemini Vision.
+ * Server Action: Multimodal vision scan of drainage obstruction photos via Google Gemini Vision.
+ * If offline or key is missing, DOES NOT return fake pre-filled data.
  */
 export async function analyzeObstructionPhoto(base64Image: string): Promise<AIScanResult> {
   const apiKey =
     process.env.GEMINI_API_KEY ||
     process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
+  // Never return fake data when API key is missing. Fail honestly and gracefully.
+  if (!apiKey) {
+    return {
+      success: false,
+      detectedCategories: [],
+      obstructionSeverity: "low",
+      suggestedDescription: "",
+      recommendedAction: "needs_inspection",
+      confidenceNotes: "AI offline (GEMINI_API_KEY not configured)",
+      isUnclear: true,
+      error: "GEMINI_API_KEY is not configured.",
+    };
+  }
 
   if (!base64Image) {
     return {
@@ -60,42 +72,31 @@ export async function analyzeObstructionPhoto(base64Image: string): Promise<AISc
   }
 
   const prompt = `You are SubAI CDO Vision Assistant for urban drainage maintenance in Cagayan de Oro City.
-Examine this photo carefully and analyze both:
+Analyze this photo of a drainage structure and debris blockage.
 
-1. DRAINAGE INFRASTRUCTURE ASSET CLASSIFICATION (choose the most accurate one):
-- "Curb Inlet": Sidewalk/curb opening along a street or road gutter.
-- "Catch Basin": Storm drain box covered with a metal/iron grate or drop inlet chamber.
-- "Open Canal": Exposed open-air concrete lined ditch, street drain trench, open stormwater waterway, or estero canal.
-- "Culvert": Pipe culvert (circular concrete/metal pipe) or box culvert passing under a driveway, road, or walkway.
-- "Creek Outfall": Open creek bank discharge, natural urban stream terminus, river outfall portal, or coastal outlet.
-
-2. VISIBLE SOLID WASTE AND BLOCKAGE MATERIALS:
-- "pet_bottles": PET plastic bottles, drink cups, beverage containers.
-- "flexible_packaging": Single-use food sachets, snack wrappers, plastic shopping bags, packaging film.
-- "silt": Silt, mud, sand, dark murky sediment accumulation.
-- "organic_debris": Fallen leaves, plant trimmings, tree branches, twigs, organic matter.
-- "construction_debris": Broken concrete, rubble, cement chunks, broken bricks/slabs.
-- "residual_waste": Other miscellaneous discarded trash, textiles, Styrofoam, or mixed debris.
-
-3. SEVERITY: "low", "partial", or "substantial".
-
-Respond with ONLY valid JSON:
+Respond with ONLY a valid JSON object matching this schema:
 {
-  "drainageClassification": "Open Canal",
-  "detectedCategories": ["pet_bottles", "flexible_packaging", "silt", "organic_debris"],
-  "obstructionSeverity": "substantial",
-  "suggestedDescription": "Drainage canal severely obstructed by plastic bottles, wrappers, and debris.",
-  "recommendedAction": "verified",
-  "confidenceNotes": "Clear visibility of accumulated solid waste."
-}`;
+  "drainageClassification": "Curb Inlet" | "Catch Basin" | "Open Canal" | "Culvert" | "Creek Outfall",
+  "detectedCategories": ["pet_bottles" | "flexible_packaging" | "silt" | "organic_debris" | "construction_debris" | "residual_waste"],
+  "obstructionSeverity": "low" | "partial" | "substantial",
+  "suggestedDescription": "Factual 1-sentence description of the specific drainage structure and visible debris.",
+  "recommendedAction": "verified" | "needs_inspection",
+  "confidenceNotes": "Notes on materials observed",
+  "isUnclear": false
+}
+
+Rules:
+1. If no debris is visible, set detectedCategories to [].
+2. Return raw JSON only, no markdown backticks.`;
 
   for (const model of CANDIDATE_MODELS) {
     try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
       const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-goog-api-key": apiKey,
         },
         body: JSON.stringify({
           contents: [
@@ -113,10 +114,11 @@ Respond with ONLY valid JSON:
           ],
           generationConfig: {
             temperature: 0.1,
-            maxOutputTokens: 400,
+            maxOutputTokens: 350,
+            responseMimeType: "application/json",
           },
         }),
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(10000),
       });
 
       if (!res.ok) {
@@ -127,25 +129,18 @@ Respond with ONLY valid JSON:
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!rawText) continue;
 
-      // Extract JSON substring from raw response
-      let jsonString = rawText.trim();
-      const firstBrace = jsonString.indexOf("{");
-      const lastBrace = jsonString.lastIndexOf("}");
-      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        jsonString = jsonString.slice(firstBrace, lastBrace + 1);
-      } else {
-        jsonString = jsonString.replace(/```json/g, "").replace(/```/g, "").trim();
-      }
+      const cleanedJson = rawText
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
 
-      const parsed = JSON.parse(jsonString);
+      const parsed = JSON.parse(cleanedJson);
 
-      // Support all schema naming variants
       const rawCategories =
         parsed.detectedCategories ||
         parsed.waste_materials ||
         parsed.detected_categories ||
         parsed.categories ||
-        parsed.materials ||
         [];
 
       const rawClassification =
@@ -155,61 +150,18 @@ Respond with ONLY valid JSON:
         parsed.classification ||
         "";
 
-      const categories = new Set<string>(
-        Array.isArray(rawCategories) ? rawCategories : []
-      );
-
-      const combinedText = `${parsed.suggestedDescription || ""} ${rawText}`.toLowerCase();
-
-      if (combinedText.includes("bottle") || combinedText.includes("cup") || combinedText.includes("container") || combinedText.includes("pet")) {
-        categories.add("pet_bottles");
-      }
-      if (combinedText.includes("sachet") || combinedText.includes("wrapper") || combinedText.includes("bag") || combinedText.includes("plastic") || combinedText.includes("film")) {
-        categories.add("flexible_packaging");
-      }
-      if (combinedText.includes("silt") || combinedText.includes("mud") || combinedText.includes("sand") || combinedText.includes("sediment")) {
-        categories.add("silt");
-      }
-      if (combinedText.includes("leaf") || combinedText.includes("leaves") || combinedText.includes("branch") || combinedText.includes("wood") || combinedText.includes("plant") || combinedText.includes("organic") || combinedText.includes("twig")) {
-        categories.add("organic_debris");
-      }
-      if (combinedText.includes("rubble") || combinedText.includes("concrete") || combinedText.includes("slab") || combinedText.includes("brick")) {
-        categories.add("construction_debris");
-      }
-
-      if (categories.size === 0) {
-        categories.add("residual_waste");
-      }
-
-      // Intelligent Normalization of drainageClassification
-      let detectedClassification = "Open Canal";
+      let detectedClassification: string | undefined = undefined;
       if (typeof rawClassification === "string" && rawClassification.trim()) {
         const rawClass = rawClassification.trim().toLowerCase();
         if (rawClass.includes("curb")) {
           detectedClassification = "Curb Inlet";
-        } else if (rawClass.includes("catch") || rawClass.includes("basin") || rawClass.includes("grate") || rawClass.includes("grated")) {
+        } else if (rawClass.includes("catch") || rawClass.includes("basin") || rawClass.includes("grate")) {
           detectedClassification = "Catch Basin";
         } else if (rawClass.includes("culvert") || rawClass.includes("pipe")) {
           detectedClassification = "Culvert";
-        } else if (rawClass.includes("creek") || rawClass.includes("outfall") || rawClass.includes("river") || rawClass.includes("stream")) {
+        } else if (rawClass.includes("creek") || rawClass.includes("outfall") || rawClass.includes("river")) {
           detectedClassification = "Creek Outfall";
-        } else if (rawClass.includes("canal") || rawClass.includes("ditch") || rawClass.includes("channel") || rawClass.includes("gutter") || rawClass.includes("trench") || rawClass.includes("estero")) {
-          detectedClassification = "Open Canal";
-        } else {
-          const match = VALID_DRAINAGE_CLASSIFICATIONS.find((c) => c.toLowerCase() === rawClass);
-          if (match) detectedClassification = match;
-        }
-      } else {
-        // Fallback scan from suggestedDescription and raw response text
-        if (combinedText.includes("curb inlet") || combinedText.includes("curb slot") || combinedText.includes("curb opening")) {
-          detectedClassification = "Curb Inlet";
-        } else if (combinedText.includes("catch basin") || combinedText.includes("metal grate") || combinedText.includes("drain grate") || combinedText.includes("grated")) {
-          detectedClassification = "Catch Basin";
-        } else if (combinedText.includes("box culvert") || combinedText.includes("pipe culvert") || combinedText.includes("culvert")) {
-          detectedClassification = "Culvert";
-        } else if (combinedText.includes("creek outfall") || combinedText.includes("creek") || combinedText.includes("river outfall")) {
-          detectedClassification = "Creek Outfall";
-        } else if (combinedText.includes("canal") || combinedText.includes("open canal") || combinedText.includes("ditch")) {
+        } else if (rawClass.includes("canal") || rawClass.includes("ditch") || rawClass.includes("channel")) {
           detectedClassification = "Open Canal";
         }
       }
@@ -218,12 +170,11 @@ Respond with ONLY valid JSON:
         success: true,
         modelUsed: model,
         drainageClassification: detectedClassification,
-        detectedCategories: Array.from(categories),
-        obstructionSeverity: parsed.obstructionSeverity || "substantial",
-        suggestedDescription:
-          parsed.suggestedDescription || `Drainage ${detectedClassification.toLowerCase()} blockage with visible plastic bottles and debris in Cagayan de Oro.`,
+        detectedCategories: Array.isArray(rawCategories) ? rawCategories : [],
+        obstructionSeverity: parsed.obstructionSeverity || "partial",
+        suggestedDescription: parsed.suggestedDescription || "",
         recommendedAction: parsed.recommendedAction || "verified",
-        confidenceNotes: `Live Gemini 3.6 Flash Scan`,
+        confidenceNotes: parsed.confidenceNotes || "Vision AI Analysis",
         isUnclear: Boolean(parsed.isUnclear),
       };
     } catch {
@@ -231,16 +182,15 @@ Respond with ONLY valid JSON:
     }
   }
 
-  // Fallback only if Google API is unreachable
+  // Never return fake data when AI fails. Return honest failure.
   return {
-    success: true,
-    modelUsed: "intake-vision-fallback",
-    drainageClassification: "Open Canal",
-    detectedCategories: ["pet_bottles", "flexible_packaging", "silt", "organic_debris"],
-    obstructionSeverity: "substantial",
-    suggestedDescription: "Drainage canal obstruction observed with accumulated plastic bottles and sediment.",
+    success: false,
+    detectedCategories: [],
+    obstructionSeverity: "low",
+    suggestedDescription: "",
     recommendedAction: "needs_inspection",
-    confidenceNotes: "Vision Intake (tap chips to edit)",
-    isUnclear: false,
+    confidenceNotes: "AI unreachable",
+    isUnclear: true,
+    error: "AI service unreachable.",
   };
 }

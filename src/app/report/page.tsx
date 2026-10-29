@@ -256,39 +256,29 @@ export default function ReportPage() {
         })
         .catch(() => {
           setIsScanning(false);
-          const fallbackScan: AIScanResult = {
-            success: true,
-            modelUsed: "cdo-drainage-intake",
-            drainageClassification: "Open Canal",
-            detectedCategories: ["pet_bottles", "flexible_packaging", "silt"],
-            obstructionSeverity: "partial",
-            suggestedDescription: "Drainage canal obstruction with visible plastic bottles and sediment.",
+          setAiResult({
+            success: false,
+            detectedCategories: [],
+            obstructionSeverity: "low",
+            suggestedDescription: "",
             recommendedAction: "needs_inspection",
-            confidenceNotes: "Vision Intake",
-            isUnclear: false,
-          };
-          setAiResult(fallbackScan);
-          setClassification(fallbackScan.drainageClassification!);
-          setSelectedCategories((prev) => Array.from(new Set([...prev, "pet_bottles", "flexible_packaging", "silt"])));
-          setDescription((prev) => (prev.trim() === "" ? fallbackScan.suggestedDescription : prev));
+            confidenceNotes: "AI offline",
+            isUnclear: true,
+            error: "AI unreachable",
+          });
         });
     } catch {
       setIsScanning(false);
-      const fallbackScan: AIScanResult = {
-        success: true,
-        modelUsed: "cdo-drainage-intake",
-        drainageClassification: "Open Canal",
-        detectedCategories: ["pet_bottles", "flexible_packaging", "silt"],
-        obstructionSeverity: "partial",
-        suggestedDescription: "Drainage canal obstruction with visible plastic bottles and sediment.",
+      setAiResult({
+        success: false,
+        detectedCategories: [],
+        obstructionSeverity: "low",
+        suggestedDescription: "",
         recommendedAction: "needs_inspection",
-        confidenceNotes: "Vision Intake",
-        isUnclear: false,
-      };
-      setAiResult(fallbackScan);
-      setClassification(fallbackScan.drainageClassification!);
-      setSelectedCategories((prev) => Array.from(new Set([...prev, "pet_bottles", "flexible_packaging", "silt"])));
-      setDescription((prev) => (prev.trim() === "" ? fallbackScan.suggestedDescription : prev));
+        confidenceNotes: "AI offline",
+        isUnclear: true,
+        error: "AI unreachable",
+      });
     }
   };
 
@@ -507,51 +497,47 @@ export default function ReportPage() {
                 )}
 
                 {aiResult && !isScanning && !scanCancelled && (
-                  <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#0F172A] flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-[#30AFFF]" />
-                        <span>Identified Materials</span>
-                      </span>
-                      <span className="text-[11px] font-semibold text-[#059669] bg-[#C4F7CA] px-2 py-0.5 rounded-full">
-                        {aiResult.modelUsed?.includes("gemini") ? "Gemini 3.6 Flash" : (aiResult.confidenceNotes || "Vision")}
-                      </span>
-                    </div>
-
-                    {/* Detected Structure Pill */}
-                    {aiResult.drainageClassification && (
-                      <div className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-xl border border-[#92EEFF] text-xs">
-                        <span className="text-[#64748B] font-medium flex items-center gap-1">
-                          Structure:
+                  aiResult.success && aiResult.detectedCategories.length > 0 ? (
+                    <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#0F172A] flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-[#30AFFF]" />
+                          <span>Identified Materials</span>
                         </span>
-                        <span className="font-bold text-[#0369A1] flex items-center gap-1">
-                          <Check className="w-3 h-3 text-[#10B981]" />
-                          {aiResult.drainageClassification} (Auto-selected)
+                        <span className="text-[11px] font-semibold text-[#059669] bg-[#C4F7CA] px-2 py-0.5 rounded-full">
+                          {aiResult.modelUsed || "Gemini 3.6 Flash"}
                         </span>
                       </div>
-                    )}
 
-                    <div className="flex flex-wrap gap-1.5">
-                      {aiResult.detectedCategories.map((cat) => (
-                        <span
-                          key={cat}
-                          className="px-2.5 py-1 bg-[#D8FFC5] text-[#0F2E1B] border border-[#86EFAC] rounded-lg text-xs font-bold uppercase tracking-wider"
-                        >
-                          {cat === "pet_bottles"
-                            ? "PET Bottles"
-                            : cat === "flexible_packaging"
-                            ? "Plastics / Sachets"
-                            : cat === "silt"
-                            ? "Silt & Mud"
-                            : cat === "organic_debris"
-                            ? "Leaves & Wood"
-                            : cat === "construction_debris"
-                            ? "Rubble / Slabs"
-                            : cat.replace(/_/g, " ")}
-                        </span>
-                      ))}
+                      <div className="flex flex-wrap gap-1.5">
+                        {aiResult.detectedCategories.map((cat) => (
+                          <span
+                            key={cat}
+                            className="px-2.5 py-1 bg-[#D8FFC5] text-[#0F2E1B] border border-[#86EFAC] rounded-lg text-xs font-bold uppercase tracking-wider"
+                          >
+                            {cat === "pet_bottles"
+                              ? "PET Bottles"
+                              : cat === "flexible_packaging"
+                              ? "Plastics / Sachets"
+                              : cat === "silt"
+                              ? "Silt & Mud"
+                              : cat === "organic_debris"
+                              ? "Leaves & Wood"
+                              : cat === "construction_debris"
+                              ? "Rubble / Slabs"
+                              : cat.replace(/_/g, " ")}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  ) : !aiResult.success ? (
+                    <div className="p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl flex items-center justify-between text-xs text-[#64748B]">
+                      <span>AI vision unavailable &bull; Please select materials below</span>
+                      <span className="text-[10px] font-semibold text-[#64748B] bg-[#E2E8F0] px-2 py-0.5 rounded-full">
+                        Offline
+                      </span>
+                    </div>
+                  ) : null
                 )}
               </div>
             )}
@@ -772,17 +758,9 @@ export default function ReportPage() {
 
             {/* Classification with Icons */}
             <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-[#0F172A]">
-                  Classification
-                </label>
-                {aiResult?.drainageClassification && (
-                  <span className="text-[10px] font-bold text-[#0369A1] bg-[#92EEFF]/40 border border-[#30AFFF]/40 px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <Sparkles className="w-2.5 h-2.5 text-[#30AFFF]" />
-                    AI recognized: {aiResult.drainageClassification}
-                  </span>
-                )}
-              </div>
+              <label className="text-xs font-bold text-[#0F172A]">
+                Classification
+              </label>
 
               <div className="flex flex-wrap gap-1.5">
                 {CLASSIFICATION_OPTIONS.map((item) => {
