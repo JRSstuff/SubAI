@@ -1,4 +1,4 @@
-# TubigLoop: Engineering Architecture & Development Rules
+# SubAI: Engineering Architecture & Development Rules
 
 > **MANDATORY DIRECTIVE FOR ALL TASKS**:  
 > Read and adhere strictly to this document before and during any code implementation, refactor, or feature addition. Every pull request, commit, and code block must conform to the standards outlined here.
@@ -42,7 +42,7 @@ Every interactive action must follow this exact state machine:
 
 ## 3. Visual System & Brand Color Palette (Rule 2)
 
-### 3.1 TubigLoop Official Color Palette
+### 3.1 SubAI Official Color Palette
 The visual theme reflects water clarity ("Tubig") combined with eco-circulation and recycling ("Loop").
 
 | Token Name | Hex Code | RGB | Primary Purpose & Usage |

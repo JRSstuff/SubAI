@@ -3,8 +3,14 @@ import "./globals.css";
 import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
 
 export const metadata: Metadata = {
-  title: "TubigLoop CDO - Urban Drainage Triage & Circular Waste Recovery",
+  applicationName: "SubAI",
+  title: "SubAI - Urban Drainage Triage & Circular Waste Recovery",
   description: "Coordinating photographic obstruction reports, AI material categorization, priority dispatch, and verified circular recovery for Cagayan de Oro City.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "SubAI",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },

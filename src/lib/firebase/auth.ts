@@ -18,12 +18,14 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "./config";
 
-export interface TubigLoopUser {
+export interface SubAIUser {
   id: string;
   username: string;
   email: string;
   role: "reporter" | "reviewer" | "collector" | "recycler" | "admin";
 }
+
+export type TubigLoopUser = SubAIUser;
 
 /**
  * Register a new user with Email and Password in Firebase Auth,
@@ -39,7 +41,7 @@ export async function registerWithFirebase(
   const validRole = ["reporter", "reviewer", "collector", "recycler", "admin"].includes(
     role.toLowerCase()
   )
-    ? (role.toLowerCase() as TubigLoopUser["role"])
+    ? (role.toLowerCase() as SubAIUser["role"])
     : "reporter";
 
   // 1. Create user in Firebase Authentication
@@ -50,7 +52,7 @@ export async function registerWithFirebase(
   await updateProfile(user, { displayName: fullName });
 
   // 3. Store role and profile in Firestore
-  const userProfile: TubigLoopUser = {
+  const userProfile: SubAIUser = {
     id: user.uid,
     username: fullName,
     email: cleanEmail,
@@ -72,7 +74,7 @@ export async function registerWithFirebase(
 export async function loginWithFirebase(
   identifier: string,
   password: string
-): Promise<TubigLoopUser> {
+): Promise<SubAIUser> {
   const cleanId = identifier.trim();
   let targetEmail = cleanId.toLowerCase();
 
@@ -102,12 +104,12 @@ export async function loginWithFirebase(
       id: user.uid,
       username: data.username || data.full_name || user.displayName || "User",
       email: user.email || targetEmail,
-      role: (data.role || "reporter").toLowerCase() as TubigLoopUser["role"],
+      role: (data.role || "reporter").toLowerCase() as SubAIUser["role"],
     };
   }
 
   // Fallback if Firestore document was not yet created
-  const fallbackUser: TubigLoopUser = {
+  const fallbackUser: SubAIUser = {
     id: user.uid,
     username: user.displayName || cleanId,
     email: user.email || targetEmail,
@@ -134,7 +136,7 @@ export async function logoutFirebase() {
  * Listen to Firebase Auth state changes.
  */
 export function onFirebaseAuthStateChanged(
-  callback: (user: FirebaseUser | null, profile: TubigLoopUser | null) => void
+  callback: (user: FirebaseUser | null, profile: SubAIUser | null) => void
 ) {
   return onAuthStateChanged(auth, async (user) => {
     if (!user) {
@@ -150,7 +152,7 @@ export function onFirebaseAuthStateChanged(
           id: user.uid,
           username: data.username || data.full_name || user.displayName || "User",
           email: user.email || "",
-          role: (data.role || "reporter").toLowerCase() as TubigLoopUser["role"],
+          role: (data.role || "reporter").toLowerCase() as SubAIUser["role"],
         });
       } else {
         callback(user, {

@@ -43,6 +43,22 @@ export async function handleLoginAction(formData: FormData): Promise<AuthRespons
     // Set secure HTTP-only session cookie
     try {
       cookieStore.set(
+        "subai_session",
+        JSON.stringify({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        }),
+        {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        }
+      );
+      cookieStore.set(
         "tubigloop_session",
         JSON.stringify({
           id: user.id,
@@ -120,6 +136,22 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
     // Set session cookie
     try {
       cookieStore.set(
+        "subai_session",
+        JSON.stringify({
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          role: newUser.role,
+        }),
+        {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 7,
+        }
+      );
+      cookieStore.set(
         "tubigloop_session",
         JSON.stringify({
           id: newUser.id,
@@ -163,6 +195,7 @@ export async function handleRegisterAction(formData: FormData): Promise<AuthResp
 export async function handleLogoutAction(): Promise<{ success: boolean }> {
   try {
     const cookieStore = await cookies();
+    cookieStore.delete("subai_session");
     cookieStore.delete("tubigloop_session");
     return { success: true };
   } catch {
@@ -181,7 +214,9 @@ export async function getCurrentUserAction(): Promise<{
 } | null> {
   try {
     const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("tubigloop_session")?.value;
+    const sessionCookie =
+      cookieStore.get("subai_session")?.value ||
+      cookieStore.get("tubigloop_session")?.value;
     if (!sessionCookie) return null;
     return JSON.parse(sessionCookie);
   } catch {

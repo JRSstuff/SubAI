@@ -52,7 +52,7 @@ export async function reverseGeocodeCDO(lat: number, lng: number): Promise<strin
       {
         headers: {
           "Accept-Language": "en",
-          "User-Agent": "TubigLoopCDO/1.0",
+          "User-Agent": "SubAICDO/1.0",
         },
         signal: AbortSignal.timeout(3500),
       }

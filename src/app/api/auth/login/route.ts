@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { loginWithFirebase, registerWithFirebase } from "@/lib/firebase/auth";
 
 const DEMO_PRESETS: Record<string, { fullName: string; role: string }> = {
+  "reporter@subai.ph": { fullName: "CDO Reporter", role: "reporter" },
+  "reviewer@subai.ph": { fullName: "CDO Reviewer", role: "reviewer" },
+  "collector@subai.ph": { fullName: "CDO Collector", role: "collector" },
+  "recycler@subai.ph": { fullName: "CDO Recycler", role: "recycler" },
+  "admin@subai.ph": { fullName: "System Administrator", role: "admin" },
   "reporter@tubigloop.edu": { fullName: "CDO Reporter", role: "reporter" },
   "reviewer@tubigloop.edu": { fullName: "CDO Reviewer", role: "reviewer" },
   "collector@tubigloop.edu": { fullName: "CDO Collector", role: "collector" },
@@ -65,7 +70,7 @@ export async function POST(request: NextRequest) {
           code === "auth/user-not-found" ||
           code === "auth/wrong-password") &&
         DEMO_PRESETS[cleanEmail] &&
-        password === "tubigloop123"
+        (password === "subai123" || password === "tubigloop123")
       ) {
         try {
           const preset = DEMO_PRESETS[cleanEmail];
@@ -114,6 +119,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    response.cookies.set("subai_session", JSON.stringify(sessionData), {
+      httpOnly: true,
+      secure: false, // allow http over LAN/hotspot
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
     response.cookies.set("tubigloop_session", JSON.stringify(sessionData), {
       httpOnly: true,
       secure: false, // allow http over LAN/hotspot

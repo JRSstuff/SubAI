@@ -989,7 +989,7 @@ export default function ReportPage() {
           <div className="w-full max-w-sm flex items-center justify-center pt-2">
             <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/90 rounded-full border border-[#86EFAC] text-xs font-extrabold text-[#064E3B] shadow-xs">
               <ShieldCheck className="w-4 h-4 text-[#059669]" />
-              <span>TubigLoop Verified</span>
+              <span>SubAI Verified</span>
             </div>
           </div>
 

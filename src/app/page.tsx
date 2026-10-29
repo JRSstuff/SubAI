@@ -44,7 +44,7 @@ export default function Home() {
           </span>
         </div>
         <p className="text-[11px] text-center">
-          TubigLoop Portal &bull; Physical handling by authorized maintenance personnel & partner recyclers.
+          SubAI Portal &bull; Physical handling by authorized maintenance personnel & partner recyclers.
         </p>
       </footer>
     </main>

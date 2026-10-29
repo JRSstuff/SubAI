@@ -61,11 +61,11 @@ const ROLES = [
 ];
 
 const DEMO_ACCOUNTS = [
-  { label: "Reporter", email: "reporter@tubigloop.edu", role: "reporter", target: "/report" },
-  { label: "Reviewer", email: "reviewer@tubigloop.edu", role: "reviewer", target: "/review" },
-  { label: "Collector", email: "collector@tubigloop.edu", role: "collector", target: "/tasks" },
-  { label: "Recycler", email: "recycler@tubigloop.edu", role: "recycler", target: "/dashboard" },
-  { label: "Admin", email: "admin@tubigloop.edu", role: "admin", target: "/admin" },
+  { label: "Reporter", email: "reporter@subai.ph", role: "reporter", target: "/report" },
+  { label: "Reviewer", email: "reviewer@subai.ph", role: "reviewer", target: "/review" },
+  { label: "Collector", email: "collector@subai.ph", role: "collector", target: "/tasks" },
+  { label: "Recycler", email: "recycler@subai.ph", role: "recycler", target: "/dashboard" },
+  { label: "Admin", email: "admin@subai.ph", role: "admin", target: "/admin" },
 ];
 
 export function AuthCard() {
@@ -156,8 +156,8 @@ export function AuthCard() {
 
   const handleQuickLogin = (demoEmail: string) => {
     setUsername(demoEmail);
-    setPassword("tubigloop123");
-    executeLogin(demoEmail, "tubigloop123");
+    setPassword("subai123");
+    executeLogin(demoEmail, "subai123");
   };
 
   const handleRegisterSubmit = async () => {
@@ -292,7 +292,7 @@ export function AuthCard() {
                 <input
                   type="email"
                   tabIndex={mode === "register" ? 0 : -1}
-                  placeholder="Email Address (e.g. user@tubigloop.ph)"
+                  placeholder="Email Address (e.g. user@subai.ph)"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={(e) => {
@@ -761,7 +761,7 @@ export function AuthCard() {
               <input
                 type="email"
                 autoComplete="email"
-                placeholder="Email Address (e.g. user@tubigloop.ph)"
+                placeholder="Email Address (e.g. user@subai.ph)"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => {

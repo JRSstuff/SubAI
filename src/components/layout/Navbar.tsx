@@ -225,7 +225,7 @@ export function Navbar({ currentUser, onLogout }: NavbarProps) {
             </div>
             <div className="flex flex-col text-left">
               <span className="font-bold text-[#0F172A] leading-tight truncate max-w-[130px]">
-                {user?.username || "TubigLoop User"}
+                {user?.username || "SubAI User"}
               </span>
               <span className="text-[10px] text-[#30AFFF] font-extrabold uppercase tracking-wider">
                 {user?.role || "REPORTER"}

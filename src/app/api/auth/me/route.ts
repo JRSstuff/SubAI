@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get("tubigloop_session")?.value;
+    const sessionCookie =
+      request.cookies.get("subai_session")?.value ||
+      request.cookies.get("tubigloop_session")?.value;
     if (!sessionCookie) {
       return NextResponse.json({ authenticated: false, user: null });
     }

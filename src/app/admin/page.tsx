@@ -51,7 +51,7 @@ export default function AdminPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("tubigloop123");
+  const [newPassword, setNewPassword] = useState("subai123");
   const [newRole, setNewRole] = useState("reporter");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -476,7 +476,7 @@ export default function AdminPage() {
                   <input
                     type="email"
                     required
-                    placeholder="user@tubigloop.edu or @ustp.edu.ph"
+                    placeholder="user@subai.ph or @cdo.gov.ph"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     className="w-full h-11 px-3 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs font-medium text-[#0F172A] focus:bg-white focus:border-[#30AFFF] focus:outline-none"

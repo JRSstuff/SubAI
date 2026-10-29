@@ -1,15 +1,15 @@
-# TubigLoop CDO: Master Project Plan & Execution Checklist
+# SubAI CDO: Master Project Plan & Execution Checklist
 
-> **Campus Pilot & Software Prototype for CEIW 2026 (Green Innovation Pitching Competition)**  
-> **Challenge Area**: Green Schools and Learning (Low-waste, Climate-Smart Campus)  
-> **Core Premise**: *"Software ra atong product. Atong trabaho kay klarohon ang report, assignment ug evidence. Ang actual cleanup ug recycling kay sa participating campus personnel ug partners."*  
-> (Our software coordinates information, assignments, and verified chain-of-custody evidence; physical handling and weighing are performed by authorized campus personnel and recycler partners.)
+> **Urban Pilot & Software Prototype for CEIW 2026 (Green Innovation Pitching Competition)**  
+> **Challenge Area**: Low-waste, Climate-Smart Urban Drainage & Circular Recovery
+> **Core Premise**: *"Software ra atong product. Atong trabaho kay klarohon ang report, assignment ug evidence. Ang actual cleanup ug recycling kay sa participating personnel ug partners."*  
+> (Our software coordinates information, assignments, and verified chain-of-custody evidence; physical handling and weighing are performed by authorized personnel and recycler partners.)
 
 ---
 
 ## 1. Executive Summary & Purpose
 
-TubigLoop CDO is a Progressive Web App (PWA) designed for higher education campuses in Cagayan de Oro to transform drainage obstruction reports into verified cleanup tasks, measured material batches, and auditable recycling handovers.
+SubAI CDO is a Progressive Web App (PWA) designed for Cagayan de Oro to transform drainage obstruction reports into verified cleanup tasks, measured material batches, and auditable recycling handovers.
 
 ### What Success Means
 - **Full Traceability**: A reviewer or auditor can trace a single campus report from initial photo submission all the way to verified collection, measured kilogram weighing, and confirmed recycler handover.

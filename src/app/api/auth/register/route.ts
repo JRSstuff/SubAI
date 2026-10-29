@@ -101,6 +101,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    response.cookies.set("subai_session", JSON.stringify(sessionData), {
+      httpOnly: true,
+      secure: false, // allow http over LAN/hotspot
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
     response.cookies.set("tubigloop_session", JSON.stringify(sessionData), {
       httpOnly: true,
       secure: false, // allow http over LAN/hotspot

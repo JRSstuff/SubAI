@@ -50,7 +50,9 @@ export async function submitReportAction(formData: FormData): Promise<ActionResu
   try {
     const cookieStore = await cookies();
     let userId: string | null = null;
-    const sessionCookie = cookieStore.get("tubigloop_session")?.value;
+    const sessionCookie =
+      cookieStore.get("subai_session")?.value ||
+      cookieStore.get("tubigloop_session")?.value;
     if (sessionCookie) {
       try {
         const parsed = JSON.parse(sessionCookie);

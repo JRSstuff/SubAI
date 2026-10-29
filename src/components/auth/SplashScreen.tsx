@@ -24,7 +24,7 @@ export function SplashScreen({ onComplete, minDuration = 1200 }: SplashScreenPro
     <AnimatePresence onExitComplete={onComplete}>
       {isVisible && (
         <motion.div
-          key="tubigloop-splash"
+          key="subai-splash"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.45, ease: "easeInOut" } }}
           className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#F8FAFC] px-6 select-none"
@@ -68,7 +68,7 @@ export function SplashScreen({ onComplete, minDuration = 1200 }: SplashScreenPro
               <div className="relative w-64 h-24 sm:w-72 sm:h-28">
                 <Image
                   src="/LogoWithText.png"
-                  alt="TubigLoop - Pure Water Circulation"
+                  alt="SubAI - Urban Drainage Terminal"
                   fill
                   sizes="(max-width: 640px) 256px, 288px"
                   priority

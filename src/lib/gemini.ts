@@ -60,7 +60,7 @@ export async function analyzeObstructionPhoto(base64Image: string): Promise<AISc
     cleanBase64 = parts[1];
   }
 
-  const prompt = `You are TubigLoop CDO AI Vision Assistant for drainage maintenance in Cagayan de Oro City.
+  const prompt = `You are SubAI CDO Vision Assistant for drainage maintenance in Cagayan de Oro City.
 Examine this photo of a drainage canal, street gutter, culvert, or catch basin.
 
 Detect all visible waste and blockage materials:
@@ -167,7 +167,7 @@ Respond with ONLY valid JSON:
           parsed.suggestedDescription || "Drainage blockage with visible solid waste in Cagayan de Oro.",
         recommendedAction: parsed.recommendedAction || "verified",
         confidenceNotes:
-          parsed.confidenceNotes || "Analyzed via TubigLoop Vision AI.",
+          parsed.confidenceNotes || "Analyzed via SubAI Vision AI.",
         isUnclear: Boolean(parsed.isUnclear),
       };
     } catch {

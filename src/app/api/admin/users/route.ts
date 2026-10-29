@@ -6,7 +6,9 @@ const VALID_ROLES = ["reporter", "reviewer", "collector", "recycler", "admin"];
 
 function verifyAdminSession(request: NextRequest): boolean {
   try {
-    let raw = request.cookies.get("tubigloop_session")?.value;
+    let raw =
+      request.cookies.get("subai_session")?.value ||
+      request.cookies.get("tubigloop_session")?.value;
     if (!raw) return false;
     if (raw.includes("%")) {
       try {

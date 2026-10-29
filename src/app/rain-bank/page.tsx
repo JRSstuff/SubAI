@@ -135,7 +135,7 @@ export default function RainBankPage() {
                   V = Area × Rainfall × Efficiency
                 </code>
                 ) for urban facilities infrastructure planning. Because these are simulated engineering projections,
-                they are <strong>strictly excluded</strong> from TubigLoop’s verified circular mass balance totals to prevent false impact accounting.
+                they are <strong>strictly excluded</strong> from SubAI’s verified circular mass balance totals to prevent false impact accounting.
               </p>
             </div>
           </div>

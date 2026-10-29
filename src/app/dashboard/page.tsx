@@ -66,7 +66,7 @@ export default function DashboardPage() {
       encodeURIComponent(
         JSON.stringify(
           {
-            project: "TubigLoop CDO",
+            project: "SubAI CDO",
             jurisdiction: "Cagayan de Oro City",
             exportedAt: new Date().toISOString(),
             datasetType: isDemoMode ? "demo_worked_example" : "live_pilot",
@@ -80,7 +80,7 @@ export default function DashboardPage() {
     downloadAnchor.setAttribute("href", dataStr);
     downloadAnchor.setAttribute(
       "download",
-      `tubigloop_audit_metrics_${isDemoMode ? "demo" : "pilot"}.json`
+      `subai_audit_metrics_${isDemoMode ? "demo" : "pilot"}.json`
     );
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();

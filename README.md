@@ -1,7 +1,7 @@
-# TubigLoop CDO
+# SubAI CDO
 
 <p align="center">
-  <img src="./public/LogoWithText.png" alt="TubigLoop CDO Logo" width="360" />
+  <img src="./public/LogoWithText.png" alt="SubAI Logo" width="360" />
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
 
 ## Overview
 
-**TubigLoop CDO** is a mobile-first Progressive Web App (PWA) engineered to mitigate urban monsoon flash-flooding across Cagayan de Oro City (CDO). The platform coordinates photographic culvert obstruction reporting, automated multimodal Vision AI material categorization, priority dispatch triage, verified scale weighing, and circular materials recovery facility (MRF) handovers.
+**SubAI** is a mobile-first Progressive Web App (PWA) engineered to mitigate urban monsoon flash-flooding across Cagayan de Oro City (CDO). The platform coordinates photographic culvert obstruction reporting, automated multimodal Vision AI material categorization, priority dispatch triage, verified scale weighing, and circular materials recovery facility (MRF) handovers.
 
 ---
 
@@ -52,7 +52,7 @@
 
 4. **Collector Operations Hub (`/tasks`)**:
    - **Metric KPI Cards**: Real-time counters for Active Tasks, Completed Collections, Total Kilograms Diverted, and Urgent High-Priority Blockages.
-   - **Live Search & Priority Filters**: Search by street name, culvert reference number (`#TL-2026-XXXX`), or task ID, with 1-tap filtering across *High*, *Medium*, and *Low* priority.
+   - **Live Search & Priority Filters**: Search by street name, culvert reference number (`#SA-2026-XXXX`), or task ID, with 1-tap filtering across *High*, *Medium*, and *Low* priority.
    - **Field-Friendly 1-Tap Scale Increments**: Quick `+1kg`, `+5kg`, and `+10kg` buttons for rapid logging of PET bottles, flexible bags, residual trash, and silt.
    - **Before & After Visual Evidence**: Capture timestamped photos proving culvert clearance before archiving.
    - **Instant Status Transition**: Submitting a collection immediately moves the record to the **Completed** tab with a confirmation banner.
@@ -87,7 +87,7 @@
 
 ## Role-Based Access Control (RBAC)
 
-TubigLoop enforces strict route boundaries based on authenticated user roles:
+SubAI enforces strict route boundaries based on authenticated user roles:
 
 | Role | Allowed Routes | Home Route | Primary Function |
 | :--- | :--- | :--- | :--- |
@@ -106,10 +106,10 @@ All development adheres to [`PROJECT_ARCHITECTURE.md`](./PROJECT_ARCHITECTURE.md
 1. **Server-Verified Truth (Rule 1)**:
    - The UI never assumes success or displays optimistic confirmations before authoritative server responses. Exact server errors are shown if database operations fail.
 2. **Official 4-Color Palette (Rule 2)**:
-   - **Tubig Blue (Primary)**: `#30AFFF`
+   - **SubAI Blue (Primary)**: `#30AFFF`
    - **Aqua Clear (Secondary)**: `#92EEFF`
    - **Eco Mint (Accent)**: `#D8FFC5`
-   - **Loop Green (Success)**: `#C4F7CA`
+   - **Verified Green (Success)**: `#C4F7CA`
    - **Strictly Zero Gradients**: All surfaces use flat, deliberate, solid colors.
 3. **Microcopy Standard**:
    - Action buttons strictly use **1–2 words** (`Submit`, `Pin`, `Weigh`, `View`, `Camera`, `Files`).
@@ -123,12 +123,13 @@ All development adheres to [`PROJECT_ARCHITECTURE.md`](./PROJECT_ARCHITECTURE.md
 ## Project Structure
 
 ```text
-TubigLoop/
+SubAI/
 ├── public/
 │   ├── LogoWithText.png       # Official logo with branding typography
 │   ├── logo512x512.png        # Transparent brand mark (512×512)
 │   ├── icon-192x192.png       # PWA standard manifest icon
 │   ├── favicon.ico            # Multi-resolution browser tab icon
+│   ├── sw.js                  # PWA offline service worker
 │   └── manifest.json          # Progressive Web App manifest
 ├── src/
 │   ├── app/
@@ -148,9 +149,10 @@ TubigLoop/
 │   │   ├── layout.tsx         # Root app layout & metadata
 │   │   └── page.tsx           # Landing & authentication stage
 │   ├── components/
-│   │   ├── auth/              # Role-tabbed login/register cards & splash screen
+│   │   ├── auth/              # Dual-panel sliding login/register cards & splash
 │   │   ├── layout/            # Responsive navigation & mobile capsule
-│   │   └── map/               # Leaflet map component with GPS pinning & popups
+│   │   ├── map/               # Leaflet map component with GPS pinning & popups
+│   │   └── pwa/               # PWA hardware optimization & install prompt
 │   └── lib/
 │       ├── cdo-geocode.ts     # OpenStreetMap Nominatim reverse geocoder
 │       ├── firebase/          # Firebase Auth, Firestore client & services
@@ -178,8 +180,8 @@ TubigLoop/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/JRSstuff/TubigLoop.git
-   cd TubigLoop
+   git clone https://github.com/JRSstuff/SubAI.git
+   cd SubAI
    ```
 
 2. Install dependencies:

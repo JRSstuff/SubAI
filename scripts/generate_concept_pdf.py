@@ -1,4 +1,4 @@
-import os
+﻿import os
 import sys
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -40,7 +40,7 @@ class NumberedCanvas(canvas.Canvas):
         if self._pageNumber > 1:
             self.setFont('Helvetica-Bold', 8)
             self.setFillColor(colors.HexColor('#0284C7'))
-            self.drawString(margin_x, header_y, "TUBIGLOOP CDO")
+            self.drawString(margin_x, header_y, "SubAI CDO")
             self.setFont('Helvetica', 8)
             self.setFillColor(colors.HexColor('#64748B'))
             self.drawString(margin_x + 78, header_y, "| Concept Paper Technical Briefing & System Architecture")
@@ -58,14 +58,14 @@ class NumberedCanvas(canvas.Canvas):
 
         self.setFont('Helvetica', 7.5)
         self.setFillColor(colors.HexColor('#64748B'))
-        self.drawString(margin_x, footer_y, "TubigLoop CDO: Monsoon Drainage Triage & Verified Plastic Recovery | CEIW 2026")
+        self.drawString(margin_x, footer_y, "SubAI CDO: Monsoon Drainage Triage & Verified Plastic Recovery | CEIW 2026")
         
         page_text = f"Page {self._pageNumber} of {page_count}"
         self.drawRightString(page_width - margin_x, footer_y, page_text)
         self.restoreState()
 
 
-def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
+def build_pdf(filename="SubAI_CDO_Concept_Paper_Briefing.pdf"):
     doc = SimpleDocTemplate(
         filename,
         pagesize=letter,
@@ -237,7 +237,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     # ==========================================
     badge_html = "TECHNICAL SPECIFICATION &amp; CONCEPT PAPER BRIEFING MEMORANDUM &bull; REF: TL-CDO-2026-CPB"
     story.append(Paragraph(badge_html, title_badge_style))
-    story.append(Paragraph("TubigLoop CDO: Closed-Loop Drainage Obstruction Triage, Verified Solid Waste Diversion, and Rainwater Reserves", doc_title_style))
+    story.append(Paragraph("SubAI CDO: Closed-Loop Drainage Obstruction Triage, Verified Solid Waste Diversion, and Rainwater Reserves", doc_title_style))
     story.append(Paragraph("A Comprehensive System Concept, Operational Architecture, and Policy Briefing for Concept Paper Authors, Grant Proposals, and Institutional Stakeholders.", doc_subtitle_style))
 
     # Metadata Grid Table
@@ -274,7 +274,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     story.extend(make_h1("1. Executive Summary &amp; Core Value Proposition"))
     
     p_exec = (
-        "<b>TubigLoop CDO</b> is an integrated, mobile-first digital orchestration and physical chain-of-custody platform "
+        "<b>SubAI CDO</b> is an integrated, mobile-first digital orchestration and physical chain-of-custody platform "
         "engineered to mitigate the chronic urban and campus monsoon flash-flooding crises across Cagayan de Oro City. "
         "The platform coordinates photographic obstruction reporting by citizens and students, executes automated multimodal "
         "Vision AI waste categorization, performs transparent risk-based triage dispatching, enforces verified on-site scale weighing "
@@ -326,12 +326,12 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     story.append(Paragraph(p_hotspots, body_style))
     story.append(Spacer(1, 4))
 
-    # Comparison Table: Current Broken Practice vs TubigLoop
+    # Comparison Table: Current Broken Practice vs SubAI
     cdo_problem_data = [
         [
             Paragraph("<b>Operational Dimension</b>", table_header_style),
             Paragraph("<b>Conventional Municipal / Campus Practice</b>", table_header_style),
-            Paragraph("<b>TubigLoop Closed-Loop Architecture</b>", table_header_style)
+            Paragraph("<b>SubAI Closed-Loop Architecture</b>", table_header_style)
         ],
         [
             Paragraph("<b>Incident Reporting</b>", table_cell_bold),
@@ -341,7 +341,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
         [
             Paragraph("<b>Triage &amp; Prioritization</b>", table_cell_bold),
             Paragraph("Ad-hoc, subjective dispatching based on political noise or crisis complaints.", table_cell_style),
-            Paragraph("Transparent mathematical index (0–5) combining obstruction severity, disruption impact, and wait time.", table_cell_style)
+            Paragraph("Transparent mathematical index (0â€“5) combining obstruction severity, disruption impact, and wait time.", table_cell_style)
         ],
         [
             Paragraph("<b>Field Evidence</b>", table_cell_bold),
@@ -378,7 +378,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     story.extend(make_h1("3. Governance &amp; Five-Tier Role-Based Access Control (RBAC)"))
     
     p_rbac = (
-        "TubigLoop enforces ironclad security boundaries and user segregation backed by PostgreSQL Row Level Security (RLS) "
+        "SubAI enforces ironclad security boundaries and user segregation backed by PostgreSQL Row Level Security (RLS) "
         "and Next.js server-side route guards. Each stakeholder operates within a dedicated operational interface tailored "
         "to their institutional responsibilities:"
     )
@@ -401,7 +401,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
             Paragraph("<b>Reviewer</b>", table_cell_bold),
             Paragraph("Campus maintenance supervisors, LGU CLENRO / CDRRMD dispatchers", table_cell_style),
             Paragraph("<code>/review</code><br/><code>/map</code><br/><code>/dashboard</code>", table_cell_style),
-            Paragraph("Inspects unverified queue, executes 1.0x–3.5x image zoom inspection, assigns 0–5 priority score, flags duplicates, dispatches work orders.", table_cell_style)
+            Paragraph("Inspects unverified queue, executes 1.0xâ€“3.5x image zoom inspection, assigns 0â€“5 priority score, flags duplicates, dispatches work orders.", table_cell_style)
         ],
         [
             Paragraph("<b>Collector</b>", table_cell_bold),
@@ -441,7 +441,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     story.extend(make_h1("4. The End-to-End Operational Lifecycle"))
     
     p_lifecycle = (
-        "The TubigLoop lifecycle bridges community-driven detection with municipal accountability through a seven-step "
+        "The SubAI lifecycle bridges community-driven detection with municipal accountability through a seven-step "
         "closed loop. Every physical event is mirrored by a cryptographically secured database transaction:"
     )
     story.append(Paragraph(p_lifecycle, body_style))
@@ -486,7 +486,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
         ("Step 3: Review, Image Inspection & Priority Scoring (/review)",
          "Maintenance dispatchers inspect incoming queues. To prevent misjudgments caused by tiny thumbnails, reviewers can click an "
          "inspection eye icon to open an evidence modal featuring 1.0x to 3.5x continuous image zoom and complete reporter notes. "
-         "The reviewer confirms validity, filters out duplicates, and scores the incident using a transparent 0–5 priority index."),
+         "The reviewer confirms validity, filters out duplicates, and scores the incident using a transparent 0â€“5 priority index."),
         
         ("Step 4: Maintenance Work Order Execution (/tasks)",
          "The verified report converts into a field work order assigned to a specific cleaning crew. The crew accesses their mobile "
@@ -520,7 +520,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     story.extend(make_h1("5. Technical Implementation &amp; Software Engineering"))
     
     p_tech = (
-        "TubigLoop is architected as a resilient, production-ready enterprise Progressive Web App (PWA) built on modern "
+        "SubAI is architected as a resilient, production-ready enterprise Progressive Web App (PWA) built on modern "
         "Next.js 16 serverless infrastructure, Supabase PostgreSQL, and Google Gemini Multimodal AI. The system follows "
         "strict engineering tenets: zero client-side optimistic fabrication, server-verified truth, and zero UI gradients."
     )
@@ -531,7 +531,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
             Paragraph("<b>Architecture Layer</b>", table_header_style),
             Paragraph("<b>Technology</b>", table_header_style),
             Paragraph("<b>Version / Specification</b>", table_header_style),
-            Paragraph("<b>Operational Implementation in TubigLoop</b>", table_header_style)
+            Paragraph("<b>Operational Implementation in SubAI</b>", table_header_style)
         ],
         [
             Paragraph("<b>Application Framework</b>", table_cell_bold),
@@ -592,7 +592,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     story.append(Paragraph("<b>Low-Bandwidth Mobile Optimization Engine:</b>", body_bold))
     p_opt = (
         "In field disaster conditions or congested cellular environments (common along flooded corridors in CDO), standard 8MB to 12MB "
-        "smartphone photographs fail to upload, causing critical report abandonment. TubigLoop implements an in-memory client-side "
+        "smartphone photographs fail to upload, causing critical report abandonment. SubAI implements an in-memory client-side "
         "HTML5 Canvas transformation pipeline. The raw bitmap is scaled to a bounding box of 960x960 pixels at 0.72 JPEG compression "
         "within 80 milliseconds on the user's device. The resulting ~120KB payload transmits reliably even over 2G/3G links and substantially "
         "reduces serverless inference latency on Google Gemini."
@@ -615,7 +615,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     story.extend(make_h1("6. Mathematical Formulations &amp; Anti-Greenwashing Metrics"))
     
     p_math_intro = (
-        "To satisfy rigorous academic, municipal, and international donor audit requirements, TubigLoop repudiates subjective claims. "
+        "To satisfy rigorous academic, municipal, and international donor audit requirements, SubAI repudiates subjective claims. "
         "All triage rankings, recycling recovery rates, and rainwater offsets are derived from deterministic equations:"
     )
     story.append(Paragraph(p_math_intro, body_style))
@@ -633,7 +633,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
         "<b>Priority Index Equation:</b>&nbsp;&nbsp;&nbsp;&nbsp;<b>P = S_obs + S_dis + S_time</b><br/>"
         "&bull; <b>P in [0, 1]:</b> <b>Low Priority</b> (Scheduled routine maintenance within 7 days)<br/>"
         "&bull; <b>P in [2, 3]:</b> <b>Medium Priority</b> (Active dispatch within 48 hours)<br/>"
-        "&bull; <b>P in [4, 5]:</b> <b>High Priority</b> (Emergency rapid response within 6–12 hours)",
+        "&bull; <b>P in [4, 5]:</b> <b>High Priority</b> (Emergency rapid response within 6â€“12 hours)",
         bg_color=c_callout_bg, border_color=c_blue
     ))
     story.append(Spacer(1, 6))
@@ -693,7 +693,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
         [
             Paragraph("<b>USTP CDO Administration &amp; Physical Plant Office (PPO)</b>", table_cell_bold),
             Paragraph("Campus Host &amp; Maintenance Execution", table_cell_style),
-            Paragraph("Deploys ground maintenance sweepers as Collectors; uses TubigLoop to monitor 18 campus drainage catchments and curb inlets; protects USTP grounds from recurrent flood shutdown.", table_cell_style)
+            Paragraph("Deploys ground maintenance sweepers as Collectors; uses SubAI to monitor 18 campus drainage catchments and curb inlets; protects USTP grounds from recurrent flood shutdown.", table_cell_style)
         ],
         [
             Paragraph("<b>USTP Student Council &amp; Engineering Orgs</b>", table_cell_bold),
@@ -754,7 +754,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
         ],
         [
             Paragraph("<b>Phase IV: Monsoon Beta</b>", table_cell_bold),
-            Paragraph("Months 4–5", table_cell_style),
+            Paragraph("Months 4â€“5", table_cell_style),
             Paragraph("Execute live field trials during high-precipitation monsoon events; monitor CM Recto artery; validate mass-balance telemetry under heavy load (>500 reports/week).", table_cell_style)
         ],
         [
@@ -783,19 +783,19 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     
     p_legal = (
         "A compelling concept paper must substantiate compliance with prevailing Philippine environmental and disaster management mandates. "
-        "TubigLoop directly addresses the operational mandates of four major statutory frameworks:"
+        "SubAI directly addresses the operational mandates of four major statutory frameworks:"
     )
     story.append(Paragraph(p_legal, body_style))
 
     story.append(Paragraph("<b>1. Republic Act 9003 (Ecological Solid Waste Management Act of 2000):</b><br/>"
-                           "Mandates segregation at source and minimum 25% waste diversion from disposal facilities. TubigLoop provides LGUs "
+                           "Mandates segregation at source and minimum 25% waste diversion from disposal facilities. SubAI provides LGUs "
                            "and universities with verifiable, kilogram-calibrated digital records of diverted materials, directly supporting barangay MRF audits.", bullet_style))
     story.append(Paragraph("<b>2. Republic Act 11898 (Extended Producer Responsibility Act of 2022 - EPR Law):</b><br/>"
-                           "Obliges large enterprise product manufacturers to account for plastic packaging recovery. TubigLoop's immutable custody transfer receipts "
+                           "Obliges large enterprise product manufacturers to account for plastic packaging recovery. SubAI's immutable custody transfer receipts "
                            "and PET/film segregation records serve as uncompromised third-party verification for corporate EPR compliance credits.", bullet_style))
     story.append(Paragraph("<b>3. Republic Act 10121 (Philippine DRRM Act of 2010):</b><br/>"
                            "Prioritizes proactive disaster risk reduction over reactive disaster response. By identifying and clearing drainage chokepoints "
-                           "<i>before</i> monsoon downpours peak, TubigLoop operationalizes institutional pre-disaster flood mitigation.", bullet_style))
+                           "<i>before</i> monsoon downpours peak, SubAI operationalizes institutional pre-disaster flood mitigation.", bullet_style))
     story.append(Paragraph("<b>4. CDO City Ordinance No. 13378-2018 (Integrated Solid Waste Management Ordinance):</b><br/>"
                            "Prohibits the dumping of refuse into waterways and open drainage canals. The platform equips city inspectors and community brigades "
                            "with geotagged photographic evidence to enforce municipal sanitation standards.", bullet_style))
@@ -808,7 +808,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     
     p_impact = (
         "Concept papers submitted to academic bodies, DOST, or international granting entities require rigorous, quantifiable KPIs. "
-        "The following performance matrix defines the benchmark evaluation criteria for the TubigLoop pilot deployment:"
+        "The following performance matrix defines the benchmark evaluation criteria for the SubAI pilot deployment:"
     )
     story.append(Paragraph(p_impact, body_style))
 
@@ -828,7 +828,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
         [
             Paragraph("<b>Flood Hazard Reduction</b>", table_cell_bold),
             Paragraph("Drainage hydraulic cross-section availability along Bitan-ag", table_cell_style),
-            Paragraph("40%–60% choked by silt and plastic", table_cell_style),
+            Paragraph("40%â€“60% choked by silt and plastic", table_cell_style),
             Paragraph("<b>&gt;= 85% clear cross-section</b> maintained across targeted pilot corridor.", table_cell_style)
         ],
         [
@@ -875,7 +875,7 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     story.extend(make_h1("10. Directory of Acronyms &amp; Technical Glossary"))
     
     glossary_data = [
-        [Paragraph("<b>Acronym / Term</b>", table_header_style), Paragraph("<b>Definition &amp; Context in TubigLoop</b>", table_header_style)],
+        [Paragraph("<b>Acronym / Term</b>", table_header_style), Paragraph("<b>Definition &amp; Context in SubAI</b>", table_header_style)],
         [Paragraph("<b>CDO</b>", table_cell_bold), Paragraph("Cagayan de Oro City, Northern Mindanao, Philippines (Target deployment municipality).", table_cell_style)],
         [Paragraph("<b>CEIW 2026</b>", table_cell_bold), Paragraph("Circular Economy &amp; Green Innovation Pitching Competition / Challenge program.", table_cell_style)],
         [Paragraph("<b>CLENRO</b>", table_cell_bold), Paragraph("City Local Environment and Natural Resources Office (CDO's municipal solid waste authority).", table_cell_style)],
@@ -908,8 +908,8 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
         "<b>Summary Note for Proposal Authors:</b><br/>"
         "This briefing provides the complete systemic architecture for authoring academic concept papers, grant proposals, "
         "and LGU memoranda of agreement. The software implementation is fully developed, operational, and verified in codebase "
-        "repository <code>JRSstuff/TubigLoop</code>. All features referenced—including client-side canvas downscaling, Gemini Flash Lite "
-        "vision categorization, reverse geocoding, 1.0x–3.5x image zoom triage inspection, scale weighing inputs, and mass-balance accounting—are "
+        "repository <code>JRSstuff/SubAI</code>. All features referencedâ€”including client-side canvas downscaling, Gemini Flash Lite "
+        "vision categorization, reverse geocoding, 1.0xâ€“3.5x image zoom triage inspection, scale weighing inputs, and mass-balance accountingâ€”are "
         "fully functional production modules ready for field demonstration."
     )
     story.append(make_callout(summary_box, bg_color=c_callout_bg, border_color=c_blue))
@@ -919,7 +919,8 @@ def build_pdf(filename="TubigLoop_CDO_Concept_Paper_Briefing.pdf"):
     print(f"Successfully generated {filename}")
 
 if __name__ == "__main__":
-    out_pdf = "TubigLoop_CDO_Concept_Paper_Briefing.pdf"
+    out_pdf = "SubAI_CDO_Concept_Paper_Briefing.pdf"
     if len(sys.argv) > 1:
         out_pdf = sys.argv[1]
     build_pdf(out_pdf)
+
