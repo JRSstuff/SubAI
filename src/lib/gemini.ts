@@ -15,10 +15,8 @@ export interface AIScanResult {
 
 // Active fast multimodal models verified in Google AI Studio
 const CANDIDATE_MODELS = [
-  "gemini-3.8-flash",
   "gemini-3.6-flash",
   "gemini-3.5-flash",
-  "gemini-flash-latest",
 ];
 
 export const VALID_DRAINAGE_CLASSIFICATIONS = [
@@ -130,8 +128,8 @@ Respond with ONLY valid JSON:
             maxOutputTokens: 400,
           },
         }),
-        // Fast 6-second timeout per model
-        signal: AbortSignal.timeout(6000),
+        // Fast 4.5-second timeout per model
+        signal: AbortSignal.timeout(4500),
       });
 
       if (!res.ok) {
