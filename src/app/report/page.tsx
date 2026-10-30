@@ -29,6 +29,7 @@ import {
   Droplets,
   ExternalLink,
   ShieldCheck,
+  Navigation,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { CampusMap } from "@/components/map/CampusMap";
@@ -82,6 +83,8 @@ export default function ReportPage() {
   });
   const [stagedAddress, setStagedAddress] = useState("");
   const [isStagedGeocoding, setIsStagedGeocoding] = useState(false);
+  const [isLocatingCurrent, setIsLocatingCurrent] = useState(false);
+  const [gpsErrorMessage, setGpsErrorMessage] = useState<string | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Observations & Details state
@@ -176,6 +179,91 @@ export default function ReportPage() {
       setLocationName(stagedAddress);
     }
     setIsFullscreenOpen(false);
+  };
+
+  // Directly select current GPS location (standing at the canal / site)
+  const handleSelectCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setGpsErrorMessage("GPS geolocation is not supported by your browser.");
+      return;
+    }
+
+    setIsLocatingCurrent(true);
+    setGpsErrorMessage(null);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const newCoords = {
+          lat: Number(position.coords.latitude.toFixed(6)),
+          lng: Number(position.coords.longitude.toFixed(6)),
+        };
+
+        setCoords(newCoords);
+        setStagedCoords(newCoords);
+        setIsLocationPinned(true);
+        setIsLocatingCurrent(false);
+        setIsGeocoding(true);
+
+        try {
+          const address = await reverseGeocodeCDO(newCoords.lat, newCoords.lng);
+          if (address) {
+            setLocationName(address);
+            setStagedAddress(address);
+          }
+        } catch {
+          // reverse geocode fallback
+        } finally {
+          setIsGeocoding(false);
+        }
+      },
+      (error) => {
+        setIsLocatingCurrent(false);
+        let msg = "Could not retrieve your current location.";
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = "Location permission denied. Please allow GPS access in your browser or pin on map.";
+        } else if (error.code === error.TIMEOUT) {
+          msg = "GPS request timed out. Please try again or pin on map.";
+        }
+        setGpsErrorMessage(msg);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 10000,
+      }
+    );
+  };
+
+  // Use current GPS inside the full-screen map modal
+  const handleLocateInsideModal = () => {
+    if (!navigator.geolocation) {
+      alert("GPS geolocation is not supported by your browser.");
+      return;
+    }
+
+    setIsStagedGeocoding(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const newCoords = {
+          lat: Number(position.coords.latitude.toFixed(6)),
+          lng: Number(position.coords.longitude.toFixed(6)),
+        };
+
+        setStagedCoords(newCoords);
+        try {
+          const addr = await reverseGeocodeCDO(newCoords.lat, newCoords.lng);
+          if (addr) {
+            setStagedAddress(addr);
+          }
+        } finally {
+          setIsStagedGeocoding(false);
+        }
+      },
+      () => {
+        setIsStagedGeocoding(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   // Toggle category
@@ -590,40 +678,77 @@ export default function ReportPage() {
               )}
             </div>
 
-            {/* If NOT pinned yet: Prompt user to pin */}
+            {/* If NOT pinned yet: Prompt user to choose Current Location or Pin on Map */}
             {!isLocationPinned ? (
-              <div className="w-full p-6 sm:p-7 border-2 border-dashed border-[#CBD5E1] hover:border-[#30AFFF] rounded-2xl flex flex-col items-center justify-center gap-3 bg-[#F8FAFC] transition-all">
+              <div className="w-full p-5 sm:p-7 border-2 border-dashed border-[#CBD5E1] hover:border-[#30AFFF] rounded-2xl flex flex-col items-center justify-center gap-3 bg-[#F8FAFC] transition-all">
                 <div className="w-13 h-13 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex items-center justify-center text-[#30AFFF]">
-                  <MapPin className="w-6 h-6" />
+                  <Navigation className="w-6 h-6" />
                 </div>
-                <div className="flex flex-col items-center text-center">
+                <div className="flex flex-col items-center text-center max-w-sm">
                   <span className="text-sm font-bold text-[#0F172A]">
-                    Pin Drainage Location
+                    Set Drainage Location
                   </span>
                   <span className="text-xs text-[#64748B] mt-0.5">
-                    Drop a marker on the map to set coordinates
+                    Standing at the canal? Auto-select your current GPS location, or drop a pin manually on the map.
                   </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={openFullscreenMap}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-[#30AFFF] hover:bg-[#1f9eef] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 cursor-pointer min-h-[44px] mt-1"
-                >
-                  <MapPin className="w-4 h-4" />
-                  <span>Pin Location</span>
-                </button>
+
+                {gpsErrorMessage && (
+                  <div className="px-3 py-1.5 bg-[#FEF2F2] border border-[#FCA5A5] text-[#DC2626] rounded-xl text-xs font-semibold text-center">
+                    {gpsErrorMessage}
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto mt-1">
+                  <button
+                    type="button"
+                    onClick={handleSelectCurrentLocation}
+                    disabled={isLocatingCurrent}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-[#30AFFF] hover:bg-[#1f9eef] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 cursor-pointer min-h-[44px]"
+                  >
+                    {isLocatingCurrent ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Navigation className="w-4 h-4" />
+                    )}
+                    <span>{isLocatingCurrent ? "Acquiring GPS..." : "Select Current Location"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={openFullscreenMap}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-white hover:bg-[#F1F5F9] text-[#0F172A] border border-[#CBD5E1] rounded-xl text-xs font-bold shadow-2xs active:scale-95 cursor-pointer min-h-[44px]"
+                  >
+                    <MapPin className="w-4 h-4 text-[#30AFFF]" />
+                    <span>Pin on Map</span>
+                  </button>
+                </div>
               </div>
             ) : (
-              /* If PINNED: View pinned map preview with View / Change controls */
+              /* If PINNED: View pinned map preview with Current Location / View / Change controls */
               <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between text-xs font-bold text-[#64748B]">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-[#64748B]">
                   <div className="flex items-center gap-1.5">
                     <span>Pin:</span>
                     <span className="font-mono text-[11px] text-[#30AFFF]">
                       {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleSelectCurrentLocation}
+                      disabled={isLocatingCurrent}
+                      title="Update to current GPS location"
+                      className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-[#E0F2FE] hover:bg-[#BAE6FD] text-[#0284C7] rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
+                    >
+                      {isLocatingCurrent ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Navigation className="w-3.5 h-3.5" />
+                      )}
+                      <span>Current Location</span>
+                    </button>
                     <button
                       type="button"
                       onClick={openFullscreenMap}
@@ -988,14 +1113,27 @@ export default function ReportPage() {
               </span>
             </div>
 
-            <button
-              type="button"
-              onClick={handlePinAndClose}
-              className="flex items-center gap-1 px-4 py-1.5 bg-[#30AFFF] hover:bg-[#1f9eef] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
-            >
-              <Check className="w-4 h-4" />
-              <span>Pin</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleLocateInsideModal}
+                disabled={isStagedGeocoding}
+                title="Locate my GPS position"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E0F2FE] hover:bg-[#BAE6FD] text-[#0284C7] rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                <Navigation className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">My Location</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handlePinAndClose}
+                className="flex items-center gap-1 px-4 py-1.5 bg-[#30AFFF] hover:bg-[#1f9eef] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+              >
+                <Check className="w-4 h-4" />
+                <span>Confirm</span>
+              </button>
+            </div>
           </div>
 
           {/* Full-Screen Interactive Map Canvas */}
@@ -1007,7 +1145,7 @@ export default function ReportPage() {
               className="h-full w-full rounded-none border-none shadow-none"
             />
 
-            {/* Bottom Card: Street preview + Pin Action */}
+            {/* Bottom Card: Street preview + Select Current Location & Pin Actions */}
             <div className="absolute bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-10 bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-[#E2E8F0] shadow-xl flex flex-col gap-3">
               <div className="flex flex-col gap-0.5">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#64748B]">
@@ -1021,14 +1159,26 @@ export default function ReportPage() {
                 </span>
               </div>
 
-              <button
-                type="button"
-                onClick={handlePinAndClose}
-                className="w-full h-11 bg-[#30AFFF] hover:bg-[#1f9eef] text-white rounded-xl font-bold text-xs shadow-md active:scale-98 flex items-center justify-center gap-2 cursor-pointer transition-all"
-              >
-                <MapPin className="w-4 h-4" />
-                <span>Pin</span>
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={handleLocateInsideModal}
+                  disabled={isStagedGeocoding}
+                  className="h-11 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0F172A] border border-[#CBD5E1] rounded-xl font-bold text-xs active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                >
+                  <Navigation className="w-4 h-4 text-[#30AFFF]" />
+                  <span>My Location</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handlePinAndClose}
+                  className="h-11 bg-[#30AFFF] hover:bg-[#1f9eef] text-white rounded-xl font-bold text-xs shadow-md active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Confirm Pin</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

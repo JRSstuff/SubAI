@@ -413,7 +413,7 @@ export function CampusMap({
           ) : (
             <Navigation className="w-3.5 h-3.5 text-[#30AFFF]" />
           )}
-          <span>{gpsLoading ? "Locating..." : "Locate"}</span>
+          <span>{gpsLoading ? "Locating..." : "My Location"}</span>
         </button>
       </div>
     </div>
