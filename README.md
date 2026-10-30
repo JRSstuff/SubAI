@@ -1,226 +1,210 @@
-# SubAI CDO
+# 🌊 SubAI CDO — Circular Urban Drainage & Waste Recovery
 
 <p align="center">
-  <img src="./public/LogoWithText.png" alt="SubAI Logo" width="360" />
+  <img src="./public/LogoWithText.png" alt="SubAI Logo" width="380" />
 </p>
 
 <p align="center">
-  <strong>Urban Drainage Obstruction Triage, Verified Circular Waste Recovery, and Rainwater Reserves for Cagayan de Oro City.</strong>
+  <strong>AI-Powered Culvert Obstruction Triage, Verified Circular Waste Recovery, and Flood Resilience for Cagayan de Oro City.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Next.js-16.4.2-black?logo=next.js" alt="Next.js" />
-  <img src="https://img.shields.io/badge/React-19.3.0-blue?logo=react" alt="React" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?logo=tailwind-css" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/Firebase-Firestore_%26_Auth-FFA000?logo=firebase" alt="Firebase" />
-  <img src="https://img.shields.io/badge/Google_Gemini-Vision_AI-4285F4?logo=google" alt="Gemini Vision" />
-  <img src="https://img.shields.io/badge/Leaflet-GIS_Mapping-199900?logo=leaflet" alt="Leaflet" />
+  <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-16.4.2-black?style=for-the-badge&logo=next.js" alt="Next.js" /></a>
+  <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19.3.0-blue?style=for-the-badge&logo=react" alt="React" /></a>
+  <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS" /></a>
+  <a href="https://firebase.google.com"><img src="https://img.shields.io/badge/Firebase-Firestore_%26_Auth-FFA000?style=for-the-badge&logo=firebase" alt="Firebase" /></a>
+  <a href="https://ai.google.dev"><img src="https://img.shields.io/badge/Google_Gemini-3.6_Flash_Vision-4285F4?style=for-the-badge&logo=google" alt="Gemini Vision" /></a>
+  <a href="https://leafletjs.com"><img src="https://img.shields.io/badge/Leaflet-GIS_Mapping-199900?style=for-the-badge&logo=leaflet" alt="Leaflet" /></a>
 </p>
 
 ---
 
-## Overview
+## 📌 Executive Summary
 
-**SubAI** is a mobile-first Progressive Web App (PWA) engineered to mitigate urban monsoon flash-flooding across Cagayan de Oro City (CDO). The platform coordinates photographic culvert obstruction reporting, automated multimodal Vision AI material categorization, priority dispatch triage, verified scale weighing, and circular materials recovery facility (MRF) handovers.
+Urban monsoon flooding in **Cagayan de Oro City (CDO)** is severely exacerbated by stormwater culverts choked with single-use plastics, unmanaged commercial packaging, and upstream sediment. 
+
+**SubAI** transforms urban drainage maintenance into a verified **Circular Economy loop**:
+1. **Citizens** capture photographic evidence of blocked culverts;
+2. **Google Gemini 3.6 Flash** auto-classifies the drainage structure and debris fractions;
+3. **Municipal Authorities** triage, prioritize (0–5 scoring), and dispatch cleanup teams;
+4. **Field Collectors** log verified batch scale weights or qualitative clearances with before/after photos;
+5. **Recyclers** receive recovered plastic batches with real-time remaining custody balance accounting.
 
 ---
 
-## The Closed-Loop Workflow
+## 📸 System Showcase Gallery
+
+### 1. Operations Command & Geospatial Intelligence
+<p align="center">
+  <img src="./public/presentation_screenshots/desktop/04_operations_dashboard.png" alt="Operations Dashboard" width="49%" />
+  <img src="./public/presentation_screenshots/desktop/03_gis_map.png" alt="GIS Drainage Map" width="49%" />
+</p>
+
+### 2. Citizen Reporting & Field Execution (Mobile First)
+<p align="center">
+  <img src="./public/presentation_screenshots/mobile/02_report_citizen.png" alt="Citizen Report Mobile" width="24%" />
+  <img src="./public/presentation_screenshots/mobile/08_collector_tasks_active.png" alt="Tasks Active Mobile" width="24%" />
+  <img src="./public/presentation_screenshots/mobile/09_collector_weigh_modal.png" alt="Weighing Modal Mobile" width="24%" />
+  <img src="./public/presentation_screenshots/mobile/10_collector_handover_modal.png" alt="Handover Modal Mobile" width="24%" />
+</p>
+
+---
+
+## 🔄 The 7-Step Closed-Loop Lifecycle
+
+SubAI enforces strict mathematical and auditable governance across all 7 stages of culvert maintenance:
 
 ```text
-  [ Reporter ] ──► [ Reviewer ] ──► [ Collector ] ──► [ Recycler ] ──► [ Admin ]
-    /report          /review          /tasks           /dashboard        /admin
-  Photo + AI Tag   Triage & Score   Weigh & Clear    Audit Handover   User & Site Ops
+[1. Submit] ──► [2. Review] ──► [3. Assign] ──► [4. Collect] ──► [5. Hand Over] ──► [6. Confirm] ──► [7. Close]
+  Reporter         Reviewer        Reviewer        Collector        Collector+Recycler  Reviewer        Reviewer
 ```
 
-1. **Photographic Reporting (`/report`)**:
-   - **Dual-Input Camera Capture**: Direct mobile camera shutter (`capture="environment"`) or gallery file picker.
-   - **Client-Side Image Compression**: Instant HTML5 Canvas downscaling (<100ms) to 960×960 @ 0.72 JPEG to ensure zero upload latency even on spotty cellular connections.
-   - **Gemini Vision AI Engine**: Fast multimodal scan (~1.5s) detecting material fractions (PET bottles, flexible plastics/sachets, silt/mud, organic debris, residual waste, rubble).
-   - **Manual Customization**: Toggleable material chips, custom material inputs, and drainage classification tags (*Curb Inlet*, *Catch Basin*, *Open Canal*, *Culvert*, *Creek Outfall*).
-   - **Required Map Pinning**: OpenStreetMap pinning with automated Nominatim reverse geocoding for CDO streets, landmarks, and barangays.
-   - **Verification Celebration**: Full-screen confirmation overlay with haptic feedback upon submission.
-
-2. **Drainage Map Explorer (`/map`)**:
-   - **Split Explorer Mode**: Side-by-side interactive Leaflet map and live Street Feed displaying all reported culvert blockages.
-   - **On-Map Details Drawer**: Clicking any pin opens a non-dismissing card directly over the map with the **full obstruction description**, photo thumbnail, priority band, and GPS coordinates.
-   - **Click-to-Zoom Lightbox**: Tap any photo thumbnail to inspect the culvert blockage in full-screen high resolution.
-   - **Multiple View Modes**: 1-tap switcher between **Explorer** (Split Map + Streets), **Map Only** (Full-screen map), and **List View** (Document cards).
-
-3. **Triage & Priority Dispatch (`/review`)**:
-   - Triage queue for municipal coordinators to inspect culvert photos, assess obstruction severity (1–3) and traffic/drainage disruption (1–3), and assign work orders to field crews.
-
-4. **Collector Operations Hub (`/tasks`)**:
-   - **Metric KPI Cards**: Real-time counters for Active Tasks, Completed Collections, Total Kilograms Diverted, and Urgent High-Priority Blockages.
-   - **Live Search & Priority Filters**: Search by street name, culvert reference number (`#SA-2026-XXXX`), or task ID, with 1-tap filtering across *High*, *Medium*, and *Low* priority.
-   - **Field-Friendly 1-Tap Scale Increments**: Quick `+1kg`, `+5kg`, and `+10kg` buttons for rapid logging of PET bottles, flexible bags, residual trash, and silt.
-   - **Before & After Visual Evidence**: Capture timestamped photos proving culvert clearance before archiving.
-   - **Instant Status Transition**: Submitting a collection immediately moves the record to the **Completed** tab with a confirmation banner.
-
-5. **Circular Materials & Audit Telemetry (`/dashboard` & `/rain-bank`)**:
-   - **Mass Balance Accounting**: Reconciles total mass collected against accepted recycling mass, residual waste, and silt.
-   - **MRF Handover Receipts**: Generates auditable digital chain-of-custody handovers to partner recyclers with JSON export.
-   - **Rain Bank Simulator**: Hydrological runoff models calculating rainwater retention yield and non-potable municipal substitution.
-
-6. **System Governance & RBAC Portal (`/admin`)**:
-   - Comprehensive role administration (Reporter, Reviewer, Collector, Recycler, Administrator).
-   - Municipal site configurations and system security governance.
+| Step | Actor | Action & Core Rules | Output Record |
+| :---: | :--- | :--- | :--- |
+| **1. Submit** | **Reporter** | Photo capture, campus site (`ustp-cdo-main`), description, GPS pin + **"Select Current Location"** auto-geolocate, dataset origin (`pilot`). AI automatically detects PET bottles, flexible plastics, silt, and structure type. | `ReportItem` with GPS & AI tags |
+| **2. Review** | **Reviewer** | Triage states (`Verified`, `Needs inspection`, `Rejected`, `Duplicate`). When marked **Duplicate**, links to original report ID (`duplicate_of_id`) to prevent duplicate dispatches while keeping full audit history. | Review status & timestamp |
+| **3. Assign** | **Reviewer** | Calculates priority using CEIW Matrix: $\text{Obstruction Level (0–3)} + \text{Disruption Score (0–2)} = 0\text{–}5\text{ Priority}$. Dispatches authorized crew with target date. **Enforces only one active task per report**. | Active `CleanupTaskItem` |
+| **4. Collect** | **Collector** | Before & after clearance photos, completion date, and material category mass weights ($\text{PET} + \text{Flexible} + \text{Silt} + \text{Residual}$). Includes **"Scale Measurement Unavailable"** toggle for qualitative clearance without polluting the numeric mass ledger. | `CollectionBatchItem` with weights |
+| **5. Hand Over** | **Collector & Recipient** | Hands over diverted plastics to partner facility (*CDO MRF Lapasan*, *Green Loop*, *NM Plastic Recovery*). Records accepted weight and scale receipt photo. **Leaves visible remaining balance in custody**: $$\text{Remaining Balance} = \text{Submitted kg} - \text{Accepted kg}$$ | `HandoverItem` (`pending`) |
+| **6. Confirm** | **Reviewer** | Reviewer audits weigh ticket photo and validates accepted vs submitted quantities. Reviews partial balances and issues `[Confirm Handover]` or `[Reject Handover]`. | Confirmed handover receipt |
+| **7. Close** | **Reviewer** | When all batches have documented disposition, reviewer executes `[Close Task (Step 7)]` with auditable disposition notes. | Permanently closed task |
 
 ---
 
-## Tech Stack
+## ⚖️ Mathematical Mass Balance Ledger
 
-| Layer | Technology | Description |
+To prevent phantom metrics, SubAI strictly enforces mathematical mass conservation:
+
+$$\text{Total Weighed Mass (kg)} = \sum (\text{PET} + \text{Flexible Packaging} + \text{Residual Trash} + \text{Silt})$$
+
+- **Unmeasured Field Clearances**: If crews clear remote ditches without hanging scales, toggling *"Field Scale Unavailable"* logs `is_unmeasured: true` and `measured_kg: 0`, preventing dummy numbers from contaminating citywide recycling statistics.
+- **Chain of Custody**: Materials remain tracked under collector custody until acknowledged by a registered MRF receipt.
+
+---
+
+## 🤖 Multimodal Vision AI Architecture
+
+When a citizen snaps a photo, SubAI runs a fast multimodal analysis cascade via **Google Gemini Vision**:
+
+```text
+[ Camera Capture ] ──► [ Canvas Compression ] ──► [ /api/analyze ] ──► [ Gemini 3.6 Flash ]
+   Raw Mobile Photo       960x960 @ 0.72 JPEG         Server Route          Multimodal Analysis
+```
+
+- **Candidate Cascade**: Automatically falls back across `gemini-3.6-flash`, `gemini-3.5-flash`, and `gemini-3.1-flash-lite`.
+- **Honest Offline Policy**: If cellular connectivity fails or API keys are missing, the system informs the user and lets them select tags manually—**it never injects fake pre-filled tags**.
+- **Supported Classifications**: `Curb Inlet`, `Catch Basin`, `Open Canal`, `Culvert`, `Creek Outfall`.
+
+---
+
+## 🗺️ Geospatial Intelligence & Cagayan de Oro Pilot
+
+SubAI is calibrated for the specific topography and monsoon runoff patterns of Cagayan de Oro City:
+
+<p align="center">
+  <img src="./public/presentation_screenshots/desktop/03_gis_map.png" alt="GIS Map Desktop" width="80%" />
+</p>
+
+- **Target Hotspots**: CM Recto Highway, Lapasan Highway Culverts, Bitan-ag Creek Outfall, Cogon Public Market, Carmen Market, and USTP Campus.
+- **One-Tap GPS**: High-accuracy `navigator.geolocation` integration with automated OpenStreetMap reverse geocoding.
+- **Flood Retention Modeling**: Integrates with `/rain-bank` to project stormwater diversion into campus rainwater harvesting cisterns.
+
+---
+
+## 👥 Role-Based Access Control (RBAC)
+
+<p align="center">
+  <img src="./public/presentation_screenshots/desktop/12_admin_roles.png" alt="Admin Portal" width="80%" />
+</p>
+
+SubAI enforces role boundaries across 5 municipal user profiles:
+
+| Role | Allowed Routes | Primary Responsibilities |
 | :--- | :--- | :--- |
-| **Framework** | [Next.js 16.4.2](https://nextjs.org/) | App Router, Turbopack, Server Actions, & Route Handlers |
-| **Runtime & UI** | [React 19.3.0](https://react.dev/) / TypeScript 5 | Modern React with Server Components and Hooks |
-| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) | Flat solid color tokens, strictly zero gradients |
-| **Database** | [Cloud Firestore](https://firebase.google.com/docs/firestore) | Real-time NoSQL document database with strict security rules |
-| **Authentication** | [Firebase Auth](https://firebase.google.com/docs/auth) | Email/password authentication with RBAC user profiles |
-| **AI Vision Engine** | [Google Gemini API](https://ai.google.dev/) | Multimodal fast-cascade with 6s timeout and structured JSON mode |
-| **Mapping & GIS** | [Leaflet 1.9.4](https://leafletjs.com/) | OpenStreetMap raster tiles, custom SVG markers, and automated Nominatim reverse geocoding |
-| **Icon Pack** | [Lucide React 1.61.0](https://lucide.dev/) | Consistent, accessible iconography |
-| **Image Processing** | HTML5 Canvas API | High-speed client-side image compression for low-bandwidth mobile networks |
-| **Branding & Assets** | Multi-size ICO & PNG | Custom brand identity with 16px to 512px app icons and manifest |
+| **Citizen Reporter** | `/report`, `/map` | Captures geo-referenced photo evidence of blocked culverts. |
+| **Review Authority** | `/review`, `/map`, `/dashboard` | Triages reports, links duplicates, scores priority, and confirms MRF handovers. |
+| **Field Collector** | `/tasks`, `/map` | Executes drainage cleanouts, records scale batch weights, and logs handovers. |
+| **Partner Recycler** | `/dashboard`, `/tasks` | Issues digital receipts and accepts diverted PET/polyolefin batches. |
+| **System Admin** | All routes (`/admin`, etc.) | User governance, RBAC role reassignment, and audit telemetry. |
 
 ---
 
-## Role-Based Access Control (RBAC)
+## 💻 Tech Stack
 
-SubAI enforces strict route boundaries based on authenticated user roles:
-
-| Role | Allowed Routes | Home Route | Primary Function |
-| :--- | :--- | :--- | :--- |
-| **Community Reporter** | `/report`, `/map` | `/report` | Submits photo evidence, custom materials, and pinned locations |
-| **Reviewer & Dispatch** | `/review`, `/map`, `/dashboard` | `/review` | Triages incoming reports, assigns priority scores and work orders |
-| **Authorized Collector** | `/tasks`, `/map` | `/tasks` | Conducts field clearing, captures after-photos, and logs scale weights |
-| **Partner Recycler** | `/dashboard`, `/tasks`, `/map` | `/dashboard` | Receives diverted plastic batches and verifies recovery receipts |
-| **System Administrator** | All routes (`/admin`, `/rain-bank`, etc.) | `/admin` | Manages users, reassigns roles, and oversees system governance |
-
----
-
-## Design Standards & Architectural Rules
-
-All development adheres to [`PROJECT_ARCHITECTURE.md`](./PROJECT_ARCHITECTURE.md):
-
-1. **Server-Verified Truth (Rule 1)**:
-   - The UI never assumes success or displays optimistic confirmations before authoritative server responses. Exact server errors are shown if database operations fail.
-2. **Official 4-Color Palette (Rule 2)**:
-   - **SubAI Blue (Primary)**: `#30AFFF`
-   - **Aqua Clear (Secondary)**: `#92EEFF`
-   - **Eco Mint (Accent)**: `#D8FFC5`
-   - **Verified Green (Success)**: `#C4F7CA`
-   - **Strictly Zero Gradients**: All surfaces use flat, deliberate, solid colors.
-3. **Microcopy Standard**:
-   - Action buttons strictly use **1–2 words** (`Submit`, `Pin`, `Weigh`, `View`, `Camera`, `Files`).
-   - Headings and input labels use concise **1–3 words** without redundant phrasing.
-4. **Dual Device Parity**:
-   - Mobile: Floating 5-slot bottom capsule with an elevated center action button.
-   - Desktop: Full command center dashboard with top navigation.
+| Component | Technology | Role |
+| :--- | :--- | :--- |
+| **Frontend & Framework** | [Next.js 16.4.2](https://nextjs.org/) (Turbopack, App Router) | SSR, Server Actions, Route Handlers |
+| **UI Library** | [React 19.3.0](https://react.dev/) + TypeScript 5 | Modern component architecture |
+| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) | Brand tokens (`#30AFFF`, `#92EEFF`, `#D8FFC5`, `#C4F7CA`) |
+| **Database** | [Cloud Firestore](https://firebase.google.com/docs/firestore) | Real-time collections for reports, tasks, and handovers |
+| **Authentication** | [Firebase Auth](https://firebase.google.com/docs/auth) | Secure sessions with RBAC profile sync |
+| **AI Vision** | [Google Gemini 3.6 Flash](https://ai.google.dev/) | Multimodal drainage and material identification |
+| **Mapping & GIS** | [Leaflet 1.9.4](https://leafletjs.com/) | OpenStreetMap raster layers and marker clustering |
+| **Iconography** | [Lucide React](https://lucide.dev/) | Clean, accessible system icons |
 
 ---
 
-## Project Structure
-
-```text
-SubAI/
-├── public/
-│   ├── LogoWithText.png       # Official logo with branding typography
-│   ├── logo512x512.png        # Transparent brand mark (512×512)
-│   ├── icon-192x192.png       # PWA standard manifest icon
-│   ├── favicon.ico            # Multi-resolution browser tab icon
-│   ├── sw.js                  # PWA offline service worker
-│   └── manifest.json          # Progressive Web App manifest
-├── src/
-│   ├── app/
-│   │   ├── actions/           # Next.js Server Actions (operations, auth)
-│   │   ├── admin/             # System governance & RBAC administration
-│   │   ├── api/               # REST API endpoints (reports, auth, admin)
-│   │   ├── dashboard/         # Circular material mass balance & MRF telemetry
-│   │   ├── map/               # Interactive CDO drainage explorer & street feed
-│   │   ├── rain-bank/         # Rainwater harvesting retention models
-│   │   ├── report/            # Multimodal photo reporting & required map pin
-│   │   ├── review/            # Triage & dispatch queue
-│   │   ├── tasks/             # Field collection weighing & task organizer
-│   │   ├── apple-icon.png     # Next.js App Router touch icon
-│   │   ├── icon.png           # Next.js App Router browser icon
-│   │   ├── favicon.ico        # Root application favicon
-│   │   ├── globals.css        # Tailwind v4 theme tokens
-│   │   ├── layout.tsx         # Root app layout & metadata
-│   │   └── page.tsx           # Landing & authentication stage
-│   ├── components/
-│   │   ├── auth/              # Dual-panel sliding login/register cards & splash
-│   │   ├── layout/            # Responsive navigation & mobile capsule
-│   │   ├── map/               # Leaflet map component with GPS pinning & popups
-│   │   └── pwa/               # PWA hardware optimization & install prompt
-│   └── lib/
-│       ├── cdo-geocode.ts     # OpenStreetMap Nominatim reverse geocoder
-│       ├── firebase/          # Firebase Auth, Firestore client & services
-│       ├── gemini.ts          # Gemini multimodal vision cascade
-│       └── image-compress.ts  # Client-side canvas image downscaling
-├── firebase.json              # Firebase Auth & Firestore rules configuration
-├── firestore.rules            # Firestore security rules and role validators
-├── firestore.indexes.json     # Firestore database index definitions
-├── .firebaserc                # Active Firebase project link (flowloop-f621b)
-├── next.config.ts             # Next.js 16 configuration
-└── package.json               # Dependencies & build scripts
-```
-
----
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 20+ (Node.js 22 or 24 recommended)
+- Node.js 20+ (Node 22 LTS recommended)
 - npm 10+
-- A Firebase project (`flowloop-f621b`) with Authentication (Email/Password) and Cloud Firestore enabled
-- A Google Gemini API key from [Google AI Studio](https://aistudio.google.com/)
+- Google Cloud / Firebase Project with Firestore and Auth enabled
+- Google Gemini API Key from [Google AI Studio](https://aistudio.google.com/)
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository**:
    ```bash
    git clone https://github.com/JRSstuff/SubAI.git
    cd SubAI
    ```
 
-2. Install dependencies:
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. Configure environment variables in `.env.local`:
+3. **Configure environment variables** (`.env.local`):
    ```env
    # Firebase Configuration
    NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
-   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=flowloop-f621b.firebaseapp.com
-   NEXT_PUBLIC_FIREBASE_PROJECT_ID=flowloop-f621b
-   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=flowloop-f621b.firebasestorage.app
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
    NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
    NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
 
-   # Google Gemini API Key
-   GEMINI_API_KEY=your_google_ai_studio_api_key
+   # Google Gemini Vision API Key
+   GEMINI_API_KEY=your_google_ai_studio_key
    ```
 
-4. Run the development server:
+4. **Run the local development server**:
    ```bash
    npm run dev
    ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Building for Production
-
-To create an optimized production build:
-```bash
-npm run build
-npm run start
-```
+5. **Build for production**:
+   ```bash
+   npm run build
+   npm run start
+   ```
 
 ---
 
-## License
+## 📊 Presentation Pitch Deck & Screenshot Assets
 
-This project is developed for the CEIW 2026 circular drainage and rainwater resilience pilot in Cagayan de Oro City. All rights reserved.
+All high-resolution 2× Retina presentation slides and speaker talking points are organized in the project:
+- **Presentation Deck Guide**: [`PRESENTATION_PITCH_DECK.md`](./PRESENTATION_PITCH_DECK.md)
+- **Desktop Screenshots (14 files)**: `./public/presentation_screenshots/desktop/`
+- **Mobile Screenshots (14 files)**: `./public/presentation_screenshots/mobile/`
+- **Demo Data Seed Script**: `node scripts/seed_demo_data.js`
+- **Demo Data Cleanup Script**: `node scripts/cleanup_demo_data.js`
+
+---
+
+## 📄 License
+
+Developed for the **CEIW 2026** urban drainage and circular economy pilot in Cagayan de Oro City. All rights reserved.
