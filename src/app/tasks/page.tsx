@@ -35,6 +35,7 @@ import { compressImage } from "@/lib/image-compress";
 import {
   getReportsAction,
   recordCollectionAction,
+  recordHandoverAction,
 } from "@/app/actions/operations";
 
 export const isTaskCompleted = (t: any): boolean => {
@@ -79,12 +80,22 @@ export default function TasksPage() {
   const [flexibleKg, setFlexibleKg] = useState<number>(0);
   const [residualKg, setResidualKg] = useState<number>(0);
   const [siltKg, setSiltKg] = useState<number>(0);
+  const [isUnmeasured, setIsUnmeasured] = useState(false);
 
   const [beforePhoto, setBeforePhoto] = useState<string | null>(null);
   const [afterPhoto, setAfterPhoto] = useState<string | null>(null);
 
-  // Handover state
-  const [recipientOrg, setRecipientOrg] = useState("CDO Materials Recovery Facility");
+  // Step 5: Recipient Handover state
+  const [handoverTask, setHandoverTask] = useState<any | null>(null);
+  const [handoverRecipient, setHandoverRecipient] = useState("CDO Materials Recovery Facility (Barangay Lapasan)");
+  const [handoverCategory, setHandoverCategory] = useState<string>("pet_bottles");
+  const [handoverSubmittedKg, setHandoverSubmittedKg] = useState<number>(0);
+  const [handoverAcceptedKg, setHandoverAcceptedKg] = useState<number>(0);
+  const [handoverProofPhoto, setHandoverProofPhoto] = useState<string | null>(null);
+  const [handoverNotes, setHandoverNotes] = useState<string>("");
+  const [handoverFeedback, setHandoverFeedback] = useState<{ success: boolean; message: string } | null>(null);
+  const handoverCameraRef = useRef<HTMLInputElement>(null);
+  const handoverFileRef = useRef<HTMLInputElement>(null);
 
   const [isPending, startTransition] = useTransition();
   const [actionFeedback, setActionFeedback] = useState<{
@@ -238,6 +249,7 @@ export default function TasksPage() {
     setFlexibleKg(0);
     setResidualKg(0);
     setSiltKg(0);
+    setIsUnmeasured(false);
     setBeforePhoto(task.report?.photo_url || null);
     setAfterPhoto(null);
   };
@@ -269,30 +281,38 @@ export default function TasksPage() {
     e.preventDefault();
     if (!selectedTask) return;
 
-    if (totalWeighedKg <= 0) {
-      alert("Please record weighed mass in kg for at least one material category.");
+    if (!isUnmeasured && totalWeighedKg <= 0) {
+      alert("Please record weighed mass in kg for at least one material category, or toggle 'Scale Measurement Unavailable'.");
+      return;
+    }
+
+    if (!afterPhoto) {
+      alert("Please capture or upload an After-Cleanup photo evidence.");
       return;
     }
 
     setActionFeedback(null);
 
-    const batches = [
-      { category: "pet_bottles" as const, kg: Number(petKg) || 0 },
-      { category: "flexible_packaging" as const, kg: Number(flexibleKg) || 0 },
-      { category: "residual_waste" as const, kg: Number(residualKg) || 0 },
-      { category: "silt" as const, kg: Number(siltKg) || 0 },
-    ].filter((b) => b.kg > 0);
+    const batches = isUnmeasured
+      ? []
+      : [
+          { category: "pet_bottles" as const, kg: Number(petKg) || 0 },
+          { category: "flexible_packaging" as const, kg: Number(flexibleKg) || 0 },
+          { category: "residual_waste" as const, kg: Number(residualKg) || 0 },
+          { category: "silt" as const, kg: Number(siltKg) || 0 },
+        ].filter((b) => b.kg > 0);
 
     const taskId = selectedTask.id;
     const taskLocation = selectedTask.report?.location_name || "Culvert Drainage";
-    const finalKg = totalWeighedKg;
+    const finalKg = isUnmeasured ? 0 : totalWeighedKg;
 
     startTransition(async () => {
       const res = await recordCollectionAction(
         taskId,
         batches,
         beforePhoto || undefined,
-        afterPhoto || undefined
+        afterPhoto || undefined,
+        isUnmeasured
       );
 
       setActionFeedback(res);
@@ -307,6 +327,7 @@ export default function TasksPage() {
                   state: "Collected",
                   status: "Completed",
                   completed_at: new Date().toISOString(),
+                  is_unmeasured: isUnmeasured,
                   total_kg: finalKg,
                   batches,
                   before_photo_url: beforePhoto,
@@ -330,6 +351,80 @@ export default function TasksPage() {
         // Close modal after brief pause
         setTimeout(() => {
           setSelectedTask(null);
+        }, 1200);
+      }
+    });
+  };
+
+  // Step 5: Open Handover modal
+  const openHandoverModal = (task: any) => {
+    setHandoverTask(task);
+    setHandoverFeedback(null);
+    setHandoverNotes("");
+    setHandoverProofPhoto(null);
+    setHandoverRecipient("CDO Materials Recovery Facility (Barangay Lapasan)");
+
+    const batches = task.batches || [];
+    const petBatch = batches.find((b: any) => b.category === "pet_bottles");
+    const flexBatch = batches.find((b: any) => b.category === "flexible_packaging");
+
+    if (petBatch && petBatch.kg > 0) {
+      setHandoverCategory("pet_bottles");
+      setHandoverSubmittedKg(petBatch.kg);
+      setHandoverAcceptedKg(petBatch.kg);
+    } else if (flexBatch && flexBatch.kg > 0) {
+      setHandoverCategory("flexible_packaging");
+      setHandoverSubmittedKg(flexBatch.kg);
+      setHandoverAcceptedKg(flexBatch.kg);
+    } else {
+      setHandoverCategory("pet_bottles");
+      const defaultKg = Number(task.total_kg) || 5;
+      setHandoverSubmittedKg(defaultKg);
+      setHandoverAcceptedKg(defaultKg);
+    }
+  };
+
+  const handleHandoverPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const { base64 } = await compressImage(file);
+      setHandoverProofPhoto(base64);
+    } catch {
+      alert("Failed to process proof photo.");
+    }
+  };
+
+  const handleHandoverSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!handoverTask) return;
+    if (handoverAcceptedKg <= 0) {
+      alert("Accepted weight must be greater than 0 kg.");
+      return;
+    }
+    if (handoverAcceptedKg > handoverSubmittedKg) {
+      alert("Accepted weight cannot exceed submitted weight.");
+      return;
+    }
+
+    setHandoverFeedback(null);
+    startTransition(async () => {
+      const res = await recordHandoverAction(
+        handoverTask.id,
+        `${handoverTask.id}_${handoverCategory}`,
+        handoverCategory,
+        handoverRecipient,
+        handoverSubmittedKg,
+        handoverAcceptedKg,
+        handoverProofPhoto || undefined,
+        handoverNotes || undefined
+      );
+
+      setHandoverFeedback(res);
+      if (res.success) {
+        await loadTasks();
+        setTimeout(() => {
+          setHandoverTask(null);
         }, 1200);
       }
     });
@@ -810,7 +905,7 @@ export default function TasksPage() {
                         <span>Weigh & Evidence ⚖️</span>
                       </button>
                     ) : (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {t.after_photo_url && (
                           <button
                             type="button"
@@ -827,9 +922,30 @@ export default function TasksPage() {
                             <span>Proof Photo</span>
                           </button>
                         )}
-                        <span className="px-3 py-1.5 bg-[#D8FFC5] text-[#064E3B] border border-[#86EFAC] rounded-xl text-xs font-bold flex items-center gap-1">
+
+                        {/* Step 5: Handover to Recycler */}
+                        {t.state !== "Closed" && (
+                          <button
+                            type="button"
+                            onClick={() => openHandoverModal(t)}
+                            className="px-3 py-1.5 bg-[#30AFFF] hover:bg-[#1f9eef] text-white rounded-xl text-xs font-extrabold shadow-2xs active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Recycle className="w-3.5 h-3.5" />
+                            <span>Handover</span>
+                          </button>
+                        )}
+
+                        <span
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 ${
+                            t.state === "Closed"
+                              ? "bg-[#F1F5F9] text-[#475569] border border-[#CBD5E1]"
+                              : t.state === "Awaiting disposition"
+                              ? "bg-[#92EEFF]/30 text-[#0F172A] border border-[#30AFFF]"
+                              : "bg-[#D8FFC5] text-[#064E3B] border border-[#86EFAC]"
+                          }`}
+                        >
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Archived</span>
+                          <span>{t.state || "Collected"}</span>
                         </span>
                       </div>
                     )}
@@ -982,11 +1098,31 @@ export default function TasksPage() {
                       <span>Material Scale Readings (kg)</span>
                     </span>
                     <span className="text-xs font-black text-[#064E3B] bg-[#C4F7CA] px-3 py-1 rounded-full border border-[#86EFAC]">
-                      Total: {totalWeighedKg.toFixed(2)} kg
+                      {isUnmeasured ? "Unmeasured (Qualitative)" : `Total: ${totalWeighedKg.toFixed(2)} kg`}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* Measurement Unavailable Checkbox (Step 4) */}
+                  <div className="flex items-center justify-between p-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-2xl">
+                    <div className="flex flex-col pr-2">
+                      <span className="text-xs font-bold text-[#0F172A]">Field Scale Unavailable?</span>
+                      <span className="text-[11px] text-[#64748B]">
+                        Mark qualitative cleanup without scale weights (excluded from mass balance kg sums)
+                      </span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={isUnmeasured}
+                        onChange={(e) => setIsUnmeasured(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-[#CBD5E1] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#30AFFF]"></div>
+                    </label>
+                  </div>
+
+                  {!isUnmeasured ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {/* PET Bottles */}
                     <div className="p-3 bg-[#E0F2FE]/40 border border-[#BAE6FD] rounded-2xl flex flex-col gap-2">
                       <div className="flex items-center justify-between">
@@ -1195,29 +1331,15 @@ export default function TasksPage() {
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Designated Handover Recycler */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#475569] flex items-center gap-1">
-                    <Building className="w-3.5 h-3.5 text-[#30AFFF]" />
-                    <span>Designated Handover Recycler Facility:</span>
-                  </label>
-                  <select
-                    value={recipientOrg}
-                    onChange={(e) => setRecipientOrg(e.target.value)}
-                    className="w-full h-11 px-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-xs font-semibold text-[#0F172A] focus:bg-white focus:border-[#30AFFF] focus:outline-none cursor-pointer"
-                  >
-                    <option value="CDO Materials Recovery Facility">
-                      CDO Materials Recovery Facility (Barangay Lapasan)
-                    </option>
-                    <option value="Green Loop Recycling Hub">
-                      Green Loop Recycling Hub (Poblacion)
-                    </option>
-                    <option value="Northern Mindanao Plastic Recovery">
-                      Northern Mindanao Plastic Recovery (Macabalan)
-                    </option>
-                  </select>
+                ) : (
+                    <div className="p-4 bg-white border border-[#CBD5E1] rounded-2xl text-center flex flex-col items-center gap-1.5">
+                      <Scale className="w-6 h-6 text-[#94A3B8]" />
+                      <span className="text-xs font-bold text-[#0F172A]">Qualitative Record Mode</span>
+                      <p className="text-[11px] text-[#64748B] max-w-sm">
+                        Weights are omitted per CEIW mass balance rules. Clear after-photo evidence is required to confirm successful culvert clearance.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Feedback Banner */}
@@ -1241,17 +1363,19 @@ export default function TasksPage() {
                 {/* Confirm Action Button */}
                 <button
                   type="submit"
-                  disabled={isPending || totalWeighedKg <= 0}
+                  disabled={isPending || (!isUnmeasured && totalWeighedKg <= 0)}
                   className="w-full h-12 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 shadow-md active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer min-h-[48px]"
                 >
                   {isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Recording Scale Weights & Archiving Task...</span>
+                      <span>Recording Evidence & Archiving Task...</span>
                     </>
                   ) : (
                     <span>
-                      Submit Collection & Move to Completed ({totalWeighedKg.toFixed(1)} kg)
+                      {isUnmeasured
+                        ? "Submit Qualitative Clearance (Unmeasured)"
+                        : `Submit Collection & Move to Completed (${totalWeighedKg.toFixed(1)} kg)`}
                     </span>
                   )}
                 </button>
@@ -1286,6 +1410,233 @@ export default function TasksPage() {
                   accept="image/*"
                   className="hidden"
                   onChange={(e) => handlePhotoUpload(e, "after")}
+                />
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ─── STEP 5: RECIPIENT HANDOVER MODAL ─── */}
+        {handoverTask && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-white max-w-lg w-full rounded-3xl shadow-2xl border border-[#CBD5E1] overflow-hidden flex flex-col max-h-[92vh]">
+              {/* Modal Header */}
+              <div className="p-4 sm:p-5 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
+                <div className="flex flex-col min-w-0 pr-3">
+                  <span className="text-[10px] sm:text-[11px] font-extrabold text-[#30AFFF] uppercase tracking-wider flex items-center gap-1">
+                    <Recycle className="w-3.5 h-3.5" />
+                    <span>Step 5: Hand Over to Recycler</span>
+                  </span>
+                  <span className="text-sm sm:text-base font-extrabold text-[#0F172A] truncate">
+                    {handoverTask.report?.location_name || "Assigned Culvert"}
+                  </span>
+                  <span className="text-[11px] text-[#64748B] font-mono">
+                    Task Ref: #{handoverTask.report?.reference_no || handoverTask.id.slice(0, 8)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setHandoverTask(null)}
+                  className="p-2 rounded-xl border border-[#CBD5E1] text-[#64748B] hover:text-[#0F172A] hover:bg-white cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Modal Form */}
+              <form onSubmit={handleHandoverSubmit} className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto">
+                {/* 1. Recipient Org */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#0F172A] flex items-center gap-1">
+                    <Building className="w-3.5 h-3.5 text-[#30AFFF]" />
+                    <span>Receiving Organization / Recycler</span>
+                  </label>
+                  <select
+                    value={handoverRecipient}
+                    onChange={(e) => setHandoverRecipient(e.target.value)}
+                    className="w-full h-11 px-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-xs font-semibold text-[#0F172A] focus:bg-white focus:border-[#30AFFF] focus:outline-none cursor-pointer"
+                  >
+                    <option value="CDO Materials Recovery Facility (Barangay Lapasan)">
+                      CDO Materials Recovery Facility (Barangay Lapasan)
+                    </option>
+                    <option value="Green Loop Recycling Hub (Poblacion)">
+                      Green Loop Recycling Hub (Poblacion)
+                    </option>
+                    <option value="Northern Mindanao Plastic Recovery (Macabalan)">
+                      Northern Mindanao Plastic Recovery (Macabalan)
+                    </option>
+                    <option value="Authorized Campus Waste Partner">
+                      Authorized Campus Waste Partner
+                    </option>
+                  </select>
+                </div>
+
+                {/* 2. Material Category */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#0F172A]">Material Batch Category</label>
+                  <select
+                    value={handoverCategory}
+                    onChange={(e) => {
+                      const cat = e.target.value;
+                      setHandoverCategory(cat);
+                      const b = (handoverTask.batches || []).find((x: any) => x.category === cat);
+                      if (b) {
+                        setHandoverSubmittedKg(b.kg);
+                        setHandoverAcceptedKg(b.kg);
+                      }
+                    }}
+                    className="w-full h-11 px-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-xs font-semibold text-[#0F172A] focus:bg-white focus:border-[#30AFFF] focus:outline-none cursor-pointer"
+                  >
+                    <option value="pet_bottles">🍾 PET Plastic Bottles</option>
+                    <option value="flexible_packaging">🛍️ Flexible Packaging / Plastics</option>
+                    <option value="residual_waste">🗑️ Residual Waste</option>
+                  </select>
+                </div>
+
+                {/* 3. Submitted vs Accepted Weight (Partial Handovers) */}
+                <div className="p-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl flex flex-col gap-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-bold text-[#475569]">Submitted (kg):</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={handoverSubmittedKg || ""}
+                        onChange={(e) => setHandoverSubmittedKg(Math.max(0, Number(e.target.value)))}
+                        className="w-full h-10 px-3 bg-white border border-[#CBD5E1] rounded-xl text-sm font-bold text-[#0F172A]"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-bold text-[#059669]">Accepted by Recycler (kg):</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max={handoverSubmittedKg}
+                        value={handoverAcceptedKg || ""}
+                        onChange={(e) => setHandoverAcceptedKg(Math.max(0, Number(e.target.value)))}
+                        className="w-full h-10 px-3 bg-white border border-[#86EFAC] rounded-xl text-sm font-bold text-[#059669]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Real-time Partial Handover Remaining Balance Notice */}
+                  <div className="p-2.5 bg-white border border-[#BAE6FD] rounded-xl flex items-center justify-between text-xs font-semibold">
+                    <span className="text-[#0369A1]">Remaining Balance in custody:</span>
+                    <strong className="text-[#0284C7] font-black text-sm">
+                      {Math.max(0, Number((handoverSubmittedKg - handoverAcceptedKg).toFixed(1)))} kg
+                    </strong>
+                  </div>
+                </div>
+
+                {/* 4. Recipient Receipt Evidence Photo */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#0F172A] flex items-center gap-1">
+                      <Camera className="w-3.5 h-3.5 text-[#30AFFF]" />
+                      <span>Recipient Signed Receipt / Manifest Photo</span>
+                    </label>
+                    <span className="text-[10px] text-[#64748B]">Optional / Recommended</span>
+                  </div>
+
+                  {handoverProofPhoto ? (
+                    <div className="relative aspect-video rounded-xl overflow-hidden border border-[#86EFAC] bg-black/5">
+                      <img src={handoverProofPhoto} alt="Receipt proof" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setHandoverProofPhoto(null)}
+                        className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-lg shadow-sm hover:bg-red-700 cursor-pointer"
+                        title="Remove photo"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handoverCameraRef.current?.click()}
+                        className="flex-1 py-2.5 bg-white border border-[#CBD5E1] hover:border-[#30AFFF] rounded-xl text-xs font-bold text-[#0F172A] flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                      >
+                        <Camera className="w-3.5 h-3.5 text-[#30AFFF]" />
+                        <span>Camera</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handoverFileRef.current?.click()}
+                        className="flex-1 py-2.5 bg-white border border-[#CBD5E1] hover:border-[#30AFFF] rounded-xl text-xs font-bold text-[#475569] flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                      >
+                        <FolderOpen className="w-3.5 h-3.5 text-[#30AFFF]" />
+                        <span>Files</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Notes */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-[#0F172A]">Delivery Notes</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Weigh-scale ticket #4812, accepted clean bales"
+                    value={handoverNotes}
+                    onChange={(e) => setHandoverNotes(e.target.value)}
+                    className="w-full h-10 px-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-xs text-[#0F172A] focus:bg-white focus:border-[#30AFFF] focus:outline-none"
+                  />
+                </div>
+
+                {/* Feedback */}
+                {handoverFeedback && (
+                  <div
+                    className={`p-3 rounded-2xl border text-xs font-bold flex items-center gap-2 ${
+                      handoverFeedback.success
+                        ? "bg-[#D8FFC5] text-[#064E3B] border-[#86EFAC]"
+                        : "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]"
+                    }`}
+                  >
+                    {handoverFeedback.success ? (
+                      <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
+                    )}
+                    <span>{handoverFeedback.message}</span>
+                  </div>
+                )}
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={isPending || handoverAcceptedKg <= 0}
+                  className="w-full h-12 bg-[#30AFFF] hover:bg-[#1f9eef] text-white font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-md active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer min-h-[48px]"
+                >
+                  {isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Recording Handover...</span>
+                    </>
+                  ) : (
+                    <span>
+                      Submit Handover ({handoverAcceptedKg.toFixed(1)} kg Accepted)
+                    </span>
+                  )}
+                </button>
+
+                {/* Hidden inputs */}
+                <input
+                  ref={handoverCameraRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleHandoverPhotoUpload}
+                />
+                <input
+                  ref={handoverFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleHandoverPhotoUpload}
                 />
               </form>
             </div>

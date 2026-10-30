@@ -24,9 +24,16 @@ import {
   ZoomOut,
   RotateCcw,
   Move,
+  Recycle,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
-import { getReportsAction, triageReportAction } from "@/app/actions/operations";
+import {
+  getReportsAction,
+  triageReportAction,
+  getHandoversAction,
+  confirmHandoverAction,
+  closeTaskAction,
+} from "@/app/actions/operations";
 
 export default function ReviewPage() {
   const [reports, setReports] = useState<any[]>([]);
@@ -50,6 +57,8 @@ export default function ReviewPage() {
   const [assigneeName, setAssigneeName] = useState("Facilities Operations Team 1");
   const [targetDate, setTargetDate] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
+  const [duplicateOfId, setDuplicateOfId] = useState("");
+  const [handovers, setHandovers] = useState<any[]>([]);
 
   const [isPending, startTransition] = useTransition();
   const [triageFeedback, setTriageFeedback] = useState<{
@@ -85,8 +94,20 @@ export default function ReviewPage() {
     }
   };
 
+  const loadHandovers = async () => {
+    try {
+      const res = await getHandoversAction();
+      if (res.success && Array.isArray(res.data)) {
+        setHandovers(res.data);
+      }
+    } catch (e) {
+      console.warn("Could not load handovers:", e);
+    }
+  };
+
   useEffect(() => {
     loadReports();
+    loadHandovers();
   }, []);
 
   const openPhotoPreview = (photo: { url: string; title: string; desc: string }) => {
@@ -172,6 +193,7 @@ export default function ReviewPage() {
   const openTriageModal = (report: any) => {
     setSelectedReport(report);
     setTriageFeedback(null);
+    setDuplicateOfId(report.duplicate_of_id || "");
     setReviewState(report.review_state === "Submitted" ? "Verified" : report.review_state);
     const task = report.cleanup_tasks?.[0] || report.cleanup_tasks;
     if (task) {
@@ -200,7 +222,8 @@ export default function ReviewPage() {
         disruptionScore,
         assigneeName,
         targetDate,
-        reviewNotes
+        reviewNotes,
+        reviewState === "Duplicate" ? duplicateOfId : undefined
       );
       setTriageFeedback(res);
       if (res.success) {
@@ -208,6 +231,26 @@ export default function ReviewPage() {
         setTimeout(() => {
           setSelectedReport(null);
         }, 800);
+      }
+    });
+  };
+
+  const handleConfirmHandover = (handoverId: string, state: "confirmed" | "rejected") => {
+    startTransition(async () => {
+      const res = await confirmHandoverAction(handoverId, state);
+      if (res.success) {
+        await loadHandovers();
+        await loadReports();
+      }
+    });
+  };
+
+  const handleCloseTask = (taskId: string) => {
+    startTransition(async () => {
+      const res = await closeTaskAction(taskId, "All material batches verified and dispositioned.");
+      if (res.success) {
+        await loadHandovers();
+        await loadReports();
       }
     });
   };
@@ -240,9 +283,12 @@ export default function ReviewPage() {
 
         {/* ─── STATUS SWITCHER PILLS ─── */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-          {["Submitted", "Verified", "Needs inspection", "Rejected", "All"].map((tab) => {
+          {["Submitted", "Verified", "Needs inspection", "Rejected", "All", "Handovers (Step 6)"].map((tab) => {
             const isSelected = activeTab === tab;
-            const count = reports.filter((r) => (tab === "All" ? true : r.review_state === tab)).length;
+            const count =
+              tab === "Handovers (Step 6)"
+                ? handovers.length
+                : reports.filter((r) => (tab === "All" ? true : r.review_state === tab)).length;
             return (
               <button
                 key={tab}
@@ -274,6 +320,165 @@ export default function ReviewPage() {
               <Loader2 className="w-7 h-7 animate-spin text-[#30AFFF]" />
               <span className="text-xs font-bold text-[#64748B]">Loading queue...</span>
             </div>
+          ) : activeTab === "Handovers (Step 6)" ? (
+            handovers.length === 0 ? (
+              <div className="p-10 bg-white border border-[#E2E8F0] rounded-3xl text-center flex flex-col items-center justify-center gap-2">
+                <Recycle className="w-8 h-8 text-[#94A3B8]" />
+                <span className="text-sm font-bold text-[#475569]">
+                  No recycler handovers recorded yet.
+                </span>
+                <p className="text-xs text-[#64748B]">
+                  Handovers logged by collectors in Step 5 will appear here for reviewer confirmation.
+                </p>
+              </div>
+            ) : (
+              handovers.map((h) => {
+                const remainingKg = Math.max(0, (h.submitted_kg || 0) - (h.accepted_kg || 0));
+                const isConfirmed = h.confirmation_state === "confirmed";
+                const isRejected = h.confirmation_state === "rejected";
+                const isPendingState = !isConfirmed && !isRejected;
+
+                return (
+                  <div
+                    key={h.id}
+                    className="p-4 sm:p-5 bg-white border border-[#E2E8F0] hover:border-[#30AFFF] rounded-3xl shadow-xs transition-all flex flex-col gap-3.5"
+                  >
+                    {/* Header */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#F1F5F9] pb-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-extrabold bg-[#F1F5F9] text-[#0F172A] px-2.5 py-1 rounded-lg">
+                          Batch: {h.batch_id || h.id.slice(0, 8)}
+                        </span>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                            isConfirmed
+                              ? "bg-[#C4F7CA] text-[#064E3B] border border-[#86EFAC]"
+                              : isRejected
+                              ? "bg-[#FEE2E2] text-[#991B1B] border border-[#FCA5A5]"
+                              : "bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]"
+                          }`}
+                        >
+                          {isConfirmed ? "Confirmed" : isRejected ? "Rejected" : "Pending Confirmation"}
+                        </span>
+                        <span className="px-2.5 py-0.5 bg-[#D8FFC5] text-[#0F2E1B] border border-[#86EFAC] rounded-full text-[10px] font-bold uppercase tracking-wider">
+                          {h.material_category?.replace(/_/g, " ") || "PET Bottles"}
+                        </span>
+                      </div>
+                      <div className="text-xs text-[#64748B] font-medium flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-[#64748B]" />
+                        <span>{new Date(h.handover_timestamp || h.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex flex-col sm:flex-row items-start gap-4">
+                      {h.evidence_url ? (
+                        <div className="relative w-full sm:w-44 h-40 sm:h-32 rounded-2xl bg-[#0F172A] border border-[#E2E8F0] shrink-0 overflow-hidden group">
+                          <img
+                            src={h.evidence_url}
+                            alt="Handover receipt proof"
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openPhotoPreview({
+                                url: h.evidence_url!,
+                                title: `Batch ${h.batch_id || h.id} • ${h.recipient_org}`,
+                                desc: `Handover receipt evidence. Submitted: ${h.submitted_kg}kg, Accepted: ${h.accepted_kg}kg`,
+                              })
+                            }
+                            className="absolute inset-0 bg-black/35 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                          >
+                            <span className="px-3 py-1.5 bg-white/95 text-[#0F172A] rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5">
+                              <Eye className="w-3.5 h-3.5 text-[#30AFFF]" />
+                              <span>View Receipt</span>
+                            </span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-full sm:w-44 h-32 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] flex flex-col items-center justify-center text-[#94A3B8] gap-1 shrink-0">
+                          <Recycle className="w-6 h-6" />
+                          <span className="text-[10px]">No Receipt Photo</span>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col flex-1 min-w-0 gap-2 w-full">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-[#30AFFF] shrink-0" />
+                          <h3 className="text-sm font-extrabold text-[#0F172A]">
+                            {h.recipient_org}
+                          </h3>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 py-1">
+                          <div className="p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-left">
+                            <span className="text-[10px] text-[#64748B] font-bold block uppercase tracking-wider">Submitted</span>
+                            <span className="text-sm font-extrabold text-[#0F172A]">{h.submitted_kg} kg</span>
+                          </div>
+                          <div className="p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-left">
+                            <span className="text-[10px] text-[#64748B] font-bold block uppercase tracking-wider">Accepted</span>
+                            <span className="text-sm font-extrabold text-[#059669]">{h.accepted_kg} kg</span>
+                          </div>
+                          <div className={`p-2.5 border rounded-xl text-left col-span-2 sm:col-span-1 ${
+                            remainingKg > 0 ? "bg-[#FEF3C7] border-[#FDE68A]" : "bg-[#F1F5F9] border-[#E2E8F0]"
+                          }`}>
+                            <span className="text-[10px] text-[#64748B] font-bold block uppercase tracking-wider">Remaining Custody</span>
+                            <span className={`text-sm font-extrabold ${remainingKg > 0 ? "text-[#D97706]" : "text-[#64748B]"}`}>
+                              {remainingKg.toFixed(1)} kg
+                            </span>
+                          </div>
+                        </div>
+
+                        {remainingKg > 0 && (
+                          <div className="text-xs text-[#92400E] bg-[#FFFBEB] p-2 rounded-xl border border-[#FDE68A]">
+                            Partial handover recorded: <strong>{remainingKg.toFixed(1)} kg</strong> remains in collector custody awaiting secondary batch transfer.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#F1F5F9]">
+                      {isPendingState && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleConfirmHandover(h.id, "rejected")}
+                            disabled={isPending}
+                            className="px-4 py-2 border border-[#FCA5A5] text-[#DC2626] hover:bg-[#FEE2E2] rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[40px] flex items-center gap-1.5"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>Reject Handover</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleConfirmHandover(h.id, "confirmed")}
+                            disabled={isPending}
+                            className="px-5 py-2 bg-[#059669] hover:bg-[#047857] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer min-h-[40px] flex items-center gap-1.5"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Confirm Handover (Step 6)</span>
+                          </button>
+                        </>
+                      )}
+
+                      {isConfirmed && h.task_id && (
+                        <button
+                          type="button"
+                          onClick={() => handleCloseTask(h.task_id)}
+                          disabled={isPending}
+                          className="px-5 py-2 bg-[#30AFFF] hover:bg-[#1f9eef] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer min-h-[40px] flex items-center gap-1.5"
+                        >
+                          <ClipboardCheck className="w-3.5 h-3.5" />
+                          <span>Close Task (Step 7)</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )
           ) : filteredReports.length === 0 ? (
             <div className="p-10 bg-white border border-[#E2E8F0] rounded-3xl text-center flex flex-col items-center justify-center gap-2">
               <ClipboardCheck className="w-8 h-8 text-[#94A3B8]" />
@@ -654,7 +859,7 @@ export default function ReviewPage() {
                 {/* 2. Verification State Decision */}
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-bold text-[#0F172A]">
-                    Verification Status
+                    Verification Status (Step 2)
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     {[
@@ -679,87 +884,117 @@ export default function ReviewPage() {
                   </div>
                 </div>
 
-                {/* 3. Priority Matrix (0 to 5) */}
-                <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl flex flex-col gap-3.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#0F172A]">
-                      Priority Calculation
-                    </span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-extrabold ${
-                        calculatedBand === "High"
-                          ? "bg-[#FEE2E2] text-[#DC2626] border border-[#FCA5A5]"
-                          : calculatedBand === "Medium"
-                          ? "bg-[#92EEFF] text-[#0F172A] border border-[#30AFFF]"
-                          : "bg-[#D8FFC5] text-[#064E3B] border border-[#86EFAC]"
-                      }`}
+                {/* 2b. Link to Original Report if Duplicate */}
+                {reviewState === "Duplicate" && (
+                  <div className="flex flex-col gap-2 p-3.5 bg-[#FEF3C7] border border-[#FDE68A] rounded-2xl">
+                    <label className="text-xs font-bold text-[#92400E]">
+                      Link to Original Report
+                    </label>
+                    <select
+                      value={duplicateOfId}
+                      onChange={(e) => setDuplicateOfId(e.target.value)}
+                      className="w-full h-11 px-3 bg-white border border-[#FCD34D] rounded-xl text-xs font-medium text-[#0F172A] focus:outline-none"
                     >
-                      {calculatedBand} ({calculatedScore} / 5)
-                    </span>
+                      <option value="">-- Select Original Reference Report --</option>
+                      {reports
+                        .filter((r) => r.id !== selectedReport.id)
+                        .map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.reference_no} • {r.location_name || "Location"} ({r.review_state})
+                          </option>
+                        ))}
+                    </select>
+                    <p className="text-[11px] text-[#B45309]">
+                      Linking duplicate reports ensures only one active cleanup task is created while maintaining complete audit traceability.
+                    </p>
                   </div>
+                )}
 
-                  {/* Obstruction Score (0-3) */}
-                  <div className="flex flex-col gap-1.5">
-                    <div className="flex justify-between text-xs font-semibold text-[#475569]">
-                      <span>Obstruction Level (0–3):</span>
-                      <strong className="text-[#0F172A] font-extrabold">{obstructionScore}</strong>
+                {/* 3. Priority Matrix & Crew Assignment (Step 3: Only for Verified or Needs Inspection) */}
+                {reviewState !== "Rejected" && reviewState !== "Duplicate" && (
+                  <>
+                    <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl flex flex-col gap-3.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#0F172A]">
+                          Step 3: Priority Assignment
+                        </span>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-extrabold ${
+                            calculatedBand === "High"
+                              ? "bg-[#FEE2E2] text-[#DC2626] border border-[#FCA5A5]"
+                              : calculatedBand === "Medium"
+                              ? "bg-[#92EEFF] text-[#0F172A] border border-[#30AFFF]"
+                              : "bg-[#D8FFC5] text-[#064E3B] border border-[#86EFAC]"
+                          }`}
+                        >
+                          {calculatedBand} ({calculatedScore} / 5)
+                        </span>
+                      </div>
+
+                      {/* Obstruction Score (0-3) */}
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between text-xs font-semibold text-[#475569]">
+                          <span>Obstruction Level (0–3):</span>
+                          <strong className="text-[#0F172A] font-extrabold">{obstructionScore}</strong>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={3}
+                          value={obstructionScore}
+                          onChange={(e) => setObstructionScore(Number(e.target.value))}
+                          className="accent-[#30AFFF] cursor-pointer h-2 bg-[#E2E8F0] rounded-lg"
+                        />
+                      </div>
+
+                      {/* Disruption Score (0-2) */}
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between text-xs font-semibold text-[#475569]">
+                          <span>Disruption / Hazard Impact (0–2):</span>
+                          <strong className="text-[#0F172A] font-extrabold">{disruptionScore}</strong>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={2}
+                          value={disruptionScore}
+                          onChange={(e) => setDisruptionScore(Number(e.target.value))}
+                          className="accent-[#30AFFF] cursor-pointer h-2 bg-[#E2E8F0] rounded-lg"
+                        />
+                      </div>
                     </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={3}
-                      value={obstructionScore}
-                      onChange={(e) => setObstructionScore(Number(e.target.value))}
-                      className="accent-[#30AFFF] cursor-pointer h-2 bg-[#E2E8F0] rounded-lg"
-                    />
-                  </div>
 
-                  {/* Disruption Score (0-2) */}
-                  <div className="flex flex-col gap-1.5">
-                    <div className="flex justify-between text-xs font-semibold text-[#475569]">
-                      <span>Disruption / Hazard Impact (0–2):</span>
-                      <strong className="text-[#0F172A] font-extrabold">{disruptionScore}</strong>
+                    {/* 4. Assign Crew */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-[#0F172A]">
+                        Assign Cleanup Crew
+                      </label>
+                      <select
+                        value={assigneeName}
+                        onChange={(e) => setAssigneeName(e.target.value)}
+                        className="w-full h-11 px-3 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs font-medium text-[#0F172A] focus:bg-white focus:border-[#30AFFF] focus:outline-none"
+                      >
+                        <option value="Facilities Operations Team 1">Facilities Operations Team 1</option>
+                        <option value="Drainage Maintenance Squad">Drainage Maintenance Squad</option>
+                        <option value="Community Eco-Volunteer Crew">Community Eco-Volunteer Crew</option>
+                        <option value="Partner Recycler Logistics">Partner Recycler Logistics</option>
+                      </select>
                     </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={2}
-                      value={disruptionScore}
-                      onChange={(e) => setDisruptionScore(Number(e.target.value))}
-                      className="accent-[#30AFFF] cursor-pointer h-2 bg-[#E2E8F0] rounded-lg"
-                    />
-                  </div>
-                </div>
 
-                {/* 4. Assign Crew */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#0F172A]">
-                    Assign Cleanup Crew
-                  </label>
-                  <select
-                    value={assigneeName}
-                    onChange={(e) => setAssigneeName(e.target.value)}
-                    className="w-full h-11 px-3 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs font-medium text-[#0F172A] focus:bg-white focus:border-[#30AFFF] focus:outline-none"
-                  >
-                    <option value="Facilities Operations Team 1">Facilities Operations Team 1</option>
-                    <option value="Drainage Maintenance Squad">Drainage Maintenance Squad</option>
-                    <option value="Community Eco-Volunteer Crew">Community Eco-Volunteer Crew</option>
-                    <option value="Partner Recycler Logistics">Partner Recycler Logistics</option>
-                  </select>
-                </div>
-
-                {/* 5. Target Date */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#0F172A]">
-                    Target Completion Date
-                  </label>
-                  <input
-                    type="date"
-                    value={targetDate}
-                    onChange={(e) => setTargetDate(e.target.value)}
-                    className="w-full h-11 px-3 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs font-medium text-[#0F172A] focus:bg-white focus:border-[#30AFFF] focus:outline-none"
-                  />
-                </div>
+                    {/* 5. Target Date */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-[#0F172A]">
+                        Target Completion Date
+                      </label>
+                      <input
+                        type="date"
+                        value={targetDate}
+                        onChange={(e) => setTargetDate(e.target.value)}
+                        className="w-full h-11 px-3 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs font-medium text-[#0F172A] focus:bg-white focus:border-[#30AFFF] focus:outline-none"
+                      />
+                    </div>
+                  </>
+                )}
 
                 {/* 6. Review Notes */}
                 <div className="flex flex-col gap-1.5">
@@ -802,10 +1037,10 @@ export default function ReviewPage() {
                   {isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Dispatching</span>
+                      <span>{reviewState === "Rejected" || reviewState === "Duplicate" ? "Saving Decision..." : "Dispatching..."}</span>
                     </>
                   ) : (
-                    <span>Dispatch</span>
+                    <span>{reviewState === "Rejected" || reviewState === "Duplicate" ? "Save Review Decision" : "Assign & Dispatch (Step 3)"}</span>
                   )}
                 </button>
               </form>

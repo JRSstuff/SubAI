@@ -7,6 +7,9 @@ import {
   triageFirestoreReport,
   recordFirestoreCollection,
   recordFirestoreHandover,
+  getFirestoreHandovers,
+  confirmFirestoreHandover,
+  closeFirestoreTask,
   getFirestoreMassBalanceMetrics,
 } from "@/lib/firebase/firestore";
 
@@ -116,7 +119,8 @@ export async function triageReportAction(
   disruptionScore: number,
   assigneeName?: string,
   targetDate?: string,
-  reviewNotes?: string
+  reviewNotes?: string,
+  duplicateOfId?: string
 ): Promise<ActionResult> {
   try {
     const result = await triageFirestoreReport(
@@ -126,7 +130,8 @@ export async function triageReportAction(
       disruptionScore,
       assigneeName,
       targetDate,
-      reviewNotes
+      reviewNotes,
+      duplicateOfId
     );
 
     return {
@@ -143,7 +148,8 @@ export async function triageReportAction(
 }
 
 /**
- * 4. Record Collection Batches & Photo Evidence (Collector) in Firestore
+ * 4. Record Collection Batches & Photo Evidence (Collector) in Firestore (Step 4)
+ * Supports scale-weighed or unmeasured collection
  */
 export async function recordCollectionAction(
   taskId: string,
@@ -152,14 +158,17 @@ export async function recordCollectionAction(
     kg: number;
   }[],
   beforePhotoBase64?: string,
-  afterPhotoBase64?: string
+  afterPhotoBase64?: string,
+  isUnmeasured = false
 ): Promise<ActionResult> {
   try {
-    await recordFirestoreCollection(taskId, batches, beforePhotoBase64, afterPhotoBase64);
+    await recordFirestoreCollection(taskId, batches, beforePhotoBase64, afterPhotoBase64, isUnmeasured);
 
     return {
       success: true,
-      message: "Cleanup evidence & weighed material batches recorded successfully in Firestore!",
+      message: isUnmeasured
+        ? "Qualitative collection evidence recorded (unmeasured scale basis)!"
+        : "Cleanup evidence & weighed material batches recorded successfully in Firestore!",
     };
   } catch (err: unknown) {
     return {
@@ -170,27 +179,33 @@ export async function recordCollectionAction(
 }
 
 /**
- * 5. Record Recipient Handover (Collector / Recycler) in Firestore
+ * 5. Record Recipient Handover (Collector / Recycler) in Firestore (Step 5)
  */
 export async function recordHandoverAction(
+  taskId: string,
   batchId: string,
+  materialCategory: string,
   recipientOrg: string,
   submittedKg: number,
   acceptedKg: number,
-  evidencePhotoBase64?: string
+  evidencePhotoBase64?: string,
+  notes?: string
 ): Promise<ActionResult> {
   try {
     const result = await recordFirestoreHandover(
+      taskId,
       batchId,
+      materialCategory,
       recipientOrg,
       submittedKg,
       acceptedKg,
-      evidencePhotoBase64
+      evidencePhotoBase64,
+      notes
     );
 
     return {
       success: true,
-      message: `Handover of ${acceptedKg} kg to ${recipientOrg} confirmed in Firestore!`,
+      message: `Handover of ${acceptedKg} kg to ${recipientOrg} submitted for review!`,
       data: result,
     };
   } catch (err: unknown) {
@@ -202,7 +217,69 @@ export async function recordHandoverAction(
 }
 
 /**
- * 6. Get Reconciled Mass Balance for Impact Dashboard from Firestore
+ * 6. Get All Handovers for Reviewer Audit (Step 6)
+ */
+export async function getHandoversAction(): Promise<ActionResult> {
+  try {
+    const handovers = await getFirestoreHandovers();
+    return {
+      success: true,
+      message: "Handovers loaded successfully.",
+      data: handovers,
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : "Failed to load handovers.",
+    };
+  }
+}
+
+/**
+ * 6. Confirm or Reject Handover (Reviewer) (Step 6)
+ */
+export async function confirmHandoverAction(
+  handoverId: string,
+  state: "confirmed" | "rejected",
+  reviewerNotes?: string
+): Promise<ActionResult> {
+  try {
+    await confirmFirestoreHandover(handoverId, state, reviewerNotes);
+    return {
+      success: true,
+      message: `Handover has been ${state}!`,
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : "Failed to update handover confirmation.",
+    };
+  }
+}
+
+/**
+ * 7. Close Task (Reviewer) (Step 7)
+ */
+export async function closeTaskAction(
+  taskId: string,
+  notes?: string
+): Promise<ActionResult> {
+  try {
+    await closeFirestoreTask(taskId, notes);
+    return {
+      success: true,
+      message: "Task has been officially closed and archived in mass balance.",
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : "Failed to close task.",
+    };
+  }
+}
+
+/**
+ * 8. Get Reconciled Mass Balance for Impact Dashboard from Firestore
  */
 export async function getMassBalanceMetricsAction(): Promise<ActionResult> {
   try {

@@ -52,6 +52,8 @@ export interface CleanupTaskItem {
   completed_at?: string | null;
   closed_at?: string | null;
   total_kg?: number;
+  is_unmeasured?: boolean;
+  disposition_notes?: string;
   batches?: {
     category: "pet_bottles" | "flexible_packaging" | "residual_waste" | "silt";
     kg: number;
@@ -75,13 +77,16 @@ export interface CollectionBatchItem {
 
 export interface HandoverItem {
   id?: string;
+  task_id?: string;
   batch_id: string;
+  material_category?: string;
   recipient_org: string;
   submitted_kg: number;
   accepted_kg: number;
   confirmation_state: "pending" | "confirmed" | "rejected";
   evidence_url?: string | null;
   notes?: string;
+  reviewer_notes?: string;
   confirmed_at?: string;
   created_at: string;
 }
@@ -179,7 +184,7 @@ export async function getFirestoreReports(): Promise<ReportItem[]> {
 }
 
 /**
- * 3. Triage & Dispatch Report in Firestore
+ * 3. Triage & Dispatch Report in Firestore (Steps 2 & 3)
  */
 export async function triageFirestoreReport(
   reportId: string,
@@ -188,7 +193,8 @@ export async function triageFirestoreReport(
   disruptionScore: number,
   assigneeName?: string,
   targetDate?: string,
-  reviewNotes?: string
+  reviewNotes?: string,
+  duplicateOfId?: string
 ) {
   const obstruction = Math.min(Math.max(Number(obstructionScore) || 0, 0), 2);
   const disruption = Math.min(Math.max(Number(disruptionScore) || 0, 0), 2);
@@ -199,46 +205,63 @@ export async function triageFirestoreReport(
 
   const nowIso = new Date().toISOString();
 
-  // 1. Update Report
+  // 1. Update Report with Reviewer decision & optional duplicate link
   const reportRef = doc(db, "reports", reportId);
-  await updateDoc(reportRef, {
+  const updateData: Record<string, any> = {
     review_state: reviewState,
     review_notes: reviewNotes || `Triage completed as ${reviewState}.`,
     reviewed_at: nowIso,
-  });
+  };
+  if (reviewState === "Duplicate" && duplicateOfId) {
+    updateData.duplicate_of_id = duplicateOfId;
+    updateData.review_notes = reviewNotes || `Marked as duplicate of report ${duplicateOfId}.`;
+  }
+  await updateDoc(reportRef, updateData);
 
-  // 2. Update Associated Task if Verified
+  // 2. Enforce only ONE active task per report
+  const tasksCol = collection(db, "cleanup_tasks");
+  const qTask = query(tasksCol, where("report_id", "==", reportId));
+  const taskSnap = await getDocs(qTask);
+
   if (reviewState === "Verified") {
-    const tasksCol = collection(db, "cleanup_tasks");
-    const qTask = query(tasksCol, where("report_id", "==", reportId));
-    const taskSnap = await getDocs(qTask);
-
     if (!taskSnap.empty) {
       const targetDoc = taskSnap.docs[0];
       await updateDoc(doc(db, "cleanup_tasks", targetDoc.id), {
         state: "Assigned",
+        assigned_to: assigneeName || "Facilities Operations Team 1",
         priority_score: totalScore,
         priority_band: priorityBand,
         obstruction_score: obstruction,
         disruption_score: disruption,
         priority_reason: `Score ${totalScore}/5 (${priorityBand}): Obstruction=${obstruction}, Disruption=${disruption}. Assigned to ${
-          assigneeName || "Maintenance Team"
+          assigneeName || "Facilities Operations Team 1"
         }.`,
         target_date: targetDate || null,
       });
     } else {
-      // Create task if missing
       await addDoc(tasksCol, {
         report_id: reportId,
         state: "Assigned",
+        assigned_to: assigneeName || "Facilities Operations Team 1",
         priority_score: totalScore,
         priority_band: priorityBand,
         obstruction_score: obstruction,
         disruption_score: disruption,
-        priority_reason: `Score ${totalScore}/5 (${priorityBand}). Assigned to ${assigneeName || "Maintenance Team"}.`,
+        priority_reason: `Score ${totalScore}/5 (${priorityBand}). Assigned to ${assigneeName || "Facilities Operations Team 1"}.`,
         target_date: targetDate || null,
         created_at: nowIso,
       });
+    }
+  } else if (reviewState === "Rejected" || reviewState === "Duplicate") {
+    // If rejected or duplicate, close any active task so it doesn't linger in collector queue
+    if (!taskSnap.empty) {
+      for (const tDoc of taskSnap.docs) {
+        await updateDoc(doc(db, "cleanup_tasks", tDoc.id), {
+          state: "Closed",
+          status: reviewState,
+          closed_at: nowIso,
+        });
+      }
     }
   }
 
@@ -246,7 +269,7 @@ export async function triageFirestoreReport(
 }
 
 /**
- * 4. Record Collection Batches & Photo Evidence
+ * 4. Record Collection Batches & Photo Evidence (Step 4)
  */
 export async function recordFirestoreCollection(
   taskId: string,
@@ -255,23 +278,38 @@ export async function recordFirestoreCollection(
     kg: number;
   }[],
   beforePhotoBase64?: string,
-  afterPhotoBase64?: string
+  afterPhotoBase64?: string,
+  isUnmeasured = false
 ) {
   const nowIso = new Date().toISOString();
   const batchesCol = collection(db, "collection_batches");
 
-  for (const b of batches) {
-    if (b.kg > 0) {
-      await addDoc(batchesCol, {
-        task_id: taskId,
-        material_category: b.category,
-        measured_kg: b.kg,
-        measurement_basis: "scale_weighed",
-        before_photo_url: beforePhotoBase64 || null,
-        after_photo_url: afterPhotoBase64 || null,
-        dataset_origin: "pilot",
-        collected_at: nowIso,
-      });
+  if (isUnmeasured) {
+    // Qualitative unmeasured record: strictly 0 numeric kg to preserve mathematical mass balance
+    await addDoc(batchesCol, {
+      task_id: taskId,
+      material_category: "residual_waste",
+      measured_kg: 0,
+      measurement_basis: "unmeasured",
+      before_photo_url: beforePhotoBase64 || null,
+      after_photo_url: afterPhotoBase64 || null,
+      dataset_origin: "pilot",
+      collected_at: nowIso,
+    });
+  } else {
+    for (const b of batches) {
+      if (b.kg > 0) {
+        await addDoc(batchesCol, {
+          task_id: taskId,
+          material_category: b.category,
+          measured_kg: b.kg,
+          measurement_basis: "scale_weighed",
+          before_photo_url: beforePhotoBase64 || null,
+          after_photo_url: afterPhotoBase64 || null,
+          dataset_origin: "pilot",
+          collected_at: nowIso,
+        });
+      }
     }
   }
 
@@ -284,22 +322,27 @@ export async function recordFirestoreCollection(
     state: "Collected",
     status: "Completed",
     completed_at: nowIso,
-    total_kg: totalKg,
-    batches: validBatches,
+    is_unmeasured: isUnmeasured,
+    total_kg: isUnmeasured ? 0 : totalKg,
+    batches: isUnmeasured ? [] : validBatches,
     before_photo_url: beforePhotoBase64 || null,
     after_photo_url: afterPhotoBase64 || null,
   });
 }
 
 /**
- * 5. Record Recipient Handover
+ * 5. Record Recipient Handover (Step 5)
+ * Sets status to 'pending' for reviewer audit, and marks task as 'Awaiting disposition'
  */
 export async function recordFirestoreHandover(
+  taskId: string,
   batchId: string,
+  materialCategory: string,
   recipientOrg: string,
   submittedKg: number,
   acceptedKg: number,
-  evidencePhotoBase64?: string
+  evidencePhotoBase64?: string,
+  notes?: string
 ) {
   if (acceptedKg > submittedKg) {
     throw new Error("Accepted weight cannot exceed submitted batch weight.");
@@ -308,17 +351,70 @@ export async function recordFirestoreHandover(
   const nowIso = new Date().toISOString();
   const handoversCol = collection(db, "handovers");
   const docRef = await addDoc(handoversCol, {
+    task_id: taskId,
     batch_id: batchId,
+    material_category: materialCategory,
     recipient_org: recipientOrg,
     submitted_kg: submittedKg,
     accepted_kg: acceptedKg,
-    confirmation_state: "confirmed",
+    confirmation_state: "pending", // Step 5 sets pending, Step 6 Reviewer confirms
     evidence_url: evidencePhotoBase64 || null,
-    confirmed_at: nowIso,
+    notes: notes || null,
     created_at: nowIso,
   });
 
+  const taskRef = doc(db, "cleanup_tasks", taskId);
+  await updateDoc(taskRef, {
+    state: "Awaiting disposition",
+  });
+
   return { id: docRef.id };
+}
+
+/**
+ * 6. Get All Handovers for Reviewer Audit (Step 6)
+ */
+export async function getFirestoreHandovers(): Promise<HandoverItem[]> {
+  const handoversCol = collection(db, "handovers");
+  const qHandovers = query(handoversCol, orderBy("created_at", "desc"));
+  const snap = await getDocs(qHandovers);
+  const handovers: HandoverItem[] = [];
+  snap.forEach((d) => {
+    handovers.push({ id: d.id, ...d.data() } as HandoverItem);
+  });
+  return handovers;
+}
+
+/**
+ * 6. Confirm or Reject Handover (Step 6)
+ */
+export async function confirmFirestoreHandover(
+  handoverId: string,
+  state: "confirmed" | "rejected",
+  reviewerNotes?: string
+) {
+  const handoverRef = doc(db, "handovers", handoverId);
+  const nowIso = new Date().toISOString();
+  await updateDoc(handoverRef, {
+    confirmation_state: state,
+    reviewer_notes: reviewerNotes || (state === "confirmed" ? "Handover evidence verified by reviewer." : "Handover rejected."),
+    confirmed_at: nowIso,
+  });
+}
+
+/**
+ * 7. Close Task (Step 7)
+ * When all batches have a documented disposition
+ */
+export async function closeFirestoreTask(taskId: string, notes?: string) {
+  const taskRef = doc(db, "cleanup_tasks", taskId);
+  const nowIso = new Date().toISOString();
+  await updateDoc(taskRef, {
+    state: "Closed",
+    status: "Closed",
+    closed_at: nowIso,
+    disposition_notes: notes || "All material batches verified and accounted for.",
+  });
 }
 
 /**
