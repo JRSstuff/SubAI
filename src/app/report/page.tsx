@@ -33,7 +33,7 @@ import {
 import { Navbar } from "@/components/layout/Navbar";
 import { CampusMap } from "@/components/map/CampusMap";
 import { compressImage } from "@/lib/image-compress";
-import { analyzeObstructionPhoto, type AIScanResult } from "@/lib/gemini";
+import type { AIScanResult } from "@/lib/gemini";
 import { submitReportAction } from "@/app/actions/operations";
 import { reverseGeocodeCDO } from "@/lib/cdo-geocode";
 
@@ -219,7 +219,17 @@ export default function ReportPage() {
       setScanCancelled(false);
 
       setIsScanning(true);
-      const scanPromise = analyzeObstructionPhoto(base64);
+      const scanPromise = fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64 }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(errData?.error || `HTTP ${res.status}`);
+        }
+        return res.json() as Promise<AIScanResult>;
+      });
 
       scanPromise
         .then((scan) => {
@@ -254,7 +264,8 @@ export default function ReportPage() {
             }
           }
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error("AI vision error:", err);
           setIsScanning(false);
           setAiResult({
             success: false,
@@ -264,10 +275,11 @@ export default function ReportPage() {
             recommendedAction: "needs_inspection",
             confidenceNotes: "AI offline",
             isUnclear: true,
-            error: "AI unreachable",
+            error: err?.message || "AI unreachable",
           });
         });
-    } catch {
+    } catch (err) {
+      console.error("Photo processing error:", err);
       setIsScanning(false);
       setAiResult({
         success: false,

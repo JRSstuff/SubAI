@@ -1,5 +1,3 @@
-"use server";
-
 export interface AIScanResult {
   success: boolean;
   modelUsed?: string;
@@ -118,10 +116,12 @@ Rules:
             responseMimeType: "application/json",
           },
         }),
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(25000),
       });
 
       if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        console.warn(`[Gemini Vision] Model ${model} returned status ${res.status}:`, errText);
         continue;
       }
 
@@ -205,7 +205,8 @@ Rules:
         confidenceNotes: "Gemini 3.6 Flash",
         isUnclear: Boolean(parsed.isUnclear),
       };
-    } catch {
+    } catch (modelErr: any) {
+      console.warn(`[Gemini Vision] Model ${model} caught error:`, modelErr?.message || modelErr);
       continue;
     }
   }
