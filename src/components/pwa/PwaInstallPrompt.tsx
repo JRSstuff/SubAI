@@ -85,18 +85,17 @@ export function PwaInstallPrompt() {
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
     window.addEventListener("appinstalled", handleAppInstalled);
 
-    // 5. Check if user dismissed the prompt recently (e.g. within 48 hours)
+    // 5. Check if user dismissed the prompt
     const dismissedTime = localStorage.getItem("subai_pwa_dismissed_at");
-    const now = Date.now();
-    const twoDaysMs = 48 * 60 * 60 * 1000;
+    const isSuppressed = localStorage.getItem("subai_pwa_suppress");
 
-    if (!dismissedTime || now - parseInt(dismissedTime, 10) > twoDaysMs) {
-      // Show prompt after a slight 1.8s delay so the initial screen loads seamlessly
+    if (!dismissedTime && !isSuppressed) {
+      // Show prompt after a slight 2s delay so the initial screen loads seamlessly
       const timer = setTimeout(() => {
         if (!checkInstalled()) {
           setShowPrompt(true);
         }
-      }, 1800);
+      }, 2000);
 
       return () => {
         clearTimeout(timer);

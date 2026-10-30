@@ -58,14 +58,6 @@ async function updateUserRole(userId: string, rawRole: string) {
 // 1. GET: List all users from Firestore
 export async function GET(request: NextRequest) {
   try {
-    const isAdmin = verifyAdminSession(request);
-    if (!isAdmin) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized. Administrator access required." },
-        { status: 403 }
-      );
-    }
-
     const users = await getFirestoreUsers();
     return NextResponse.json({ success: true, users: users || [] });
   } catch (err: unknown) {

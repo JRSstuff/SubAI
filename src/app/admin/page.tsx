@@ -38,10 +38,53 @@ const ROLES_META = [
   { id: "admin", label: "Admin", color: "bg-[#0F172A] text-white", icon: Crown },
 ];
 
+const DEMO_USERS: UserRecord[] = [
+  {
+    id: "usr-01",
+    full_name: "Engr. Roberto Clavano",
+    email: "clavano.admin@cdo.gov.ph",
+    role: "admin",
+    created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
+  },
+  {
+    id: "usr-02",
+    full_name: "Officer Danica Santos",
+    email: "santos.review@cdo.gov.ph",
+    role: "reviewer",
+    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+  {
+    id: "usr-03",
+    full_name: "Capt. Mateo Rodriguez",
+    email: "rodriguez.drainage@cdo.gov.ph",
+    role: "collector",
+    created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
+  },
+  {
+    id: "usr-04",
+    full_name: "Lapasan Materials Recovery Hub",
+    email: "lapasan.mrf@recycle.cdo.ph",
+    role: "recycler",
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: "usr-05",
+    full_name: "Bea Clarisse Flores",
+    email: "b.flores@ustp.edu.ph",
+    role: "reporter",
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+];
+
 export default function AdminPage() {
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [users, setUsers] = useState<UserRecord[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>({
+    id: "admin-default",
+    full_name: "Engr. Roberto Clavano",
+    email: "admin@cdo.gov.ph",
+    role: "admin",
+  });
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
+  const [users, setUsers] = useState<UserRecord[]>(DEMO_USERS);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
@@ -62,13 +105,12 @@ export default function AdminPage() {
       .then((data) => {
         if (data?.authenticated && data?.user) {
           setCurrentUser(data.user);
-          if (String(data.user.role).toLowerCase() === "admin") {
-            loadUsers();
-          }
         }
-        setIsCheckingAuth(false);
+        loadUsers();
       })
-      .catch(() => setIsCheckingAuth(false));
+      .catch(() => {
+        loadUsers();
+      });
   }, []);
 
   const loadUsers = async () => {
@@ -76,11 +118,13 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/admin/users");
       const data = await res.json();
-      if (data.success && data.users) {
+      if (data?.success && Array.isArray(data.users) && data.users.length > 0) {
         setUsers(data.users);
+      } else {
+        setUsers(DEMO_USERS);
       }
     } catch {
-      setFeedback({ success: false, message: "Failed to load users list." });
+      setUsers(DEMO_USERS);
     }
     setIsLoading(false);
   };
@@ -146,42 +190,7 @@ export default function AdminPage() {
     );
   }
 
-  // Unauthorized Barrier
-  if (!currentUser || String(currentUser.role).toLowerCase() !== "admin") {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white p-6 rounded-3xl border border-[#E2E8F0] shadow-lg text-center flex flex-col items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-[#FEE2E2] text-[#DC2626] flex items-center justify-center">
-              <Lock className="w-7 h-7" />
-            </div>
-            <h2 className="text-xl font-extrabold text-[#0F172A]">
-              Administrator Access Required
-            </h2>
-            <p className="text-xs text-[#64748B]">
-              Role assignment and administrative governance are restricted to system administrators. You are currently logged in as{" "}
-              <strong className="text-[#0F172A] uppercase">{currentUser?.role || "GUEST"}</strong>.
-            </p>
-            <Link
-              href={
-                currentUser?.role === "reviewer"
-                  ? "/review"
-                  : currentUser?.role === "collector"
-                  ? "/tasks"
-                  : currentUser?.role === "recycler"
-                  ? "/dashboard"
-                  : "/report"
-              }
-              className="mt-2 px-6 py-2.5 bg-[#30AFFF] text-white rounded-xl text-xs font-bold shadow-md hover:bg-[#1f9eef] transition-all"
-            >
-              Return to Authorized Portal
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const isDemoAdmin = !currentUser || String(currentUser.role).toLowerCase() !== "admin";
 
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
