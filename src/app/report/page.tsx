@@ -496,7 +496,7 @@ export default function ReportPage() {
                   <div className="p-3 bg-[#92EEFF]/30 border border-[#30AFFF] rounded-xl flex items-center justify-between text-xs font-bold text-[#0F172A] animate-pulse">
                     <div className="flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin text-[#30AFFF]" />
-                      <span>Analyzing photo with Gemini 3.6 Flash...</span>
+                      <span>Scanning with AI...</span>
                     </div>
                     <button
                       type="button"
@@ -517,7 +517,7 @@ export default function ReportPage() {
                           <span>Identified Materials</span>
                         </span>
                         <span className="text-[11px] font-semibold text-[#059669] bg-[#C4F7CA] px-2 py-0.5 rounded-full">
-                          {aiResult.modelUsed || "Gemini 3.6 Flash"}
+                          AI Detected
                         </span>
                       </div>
 

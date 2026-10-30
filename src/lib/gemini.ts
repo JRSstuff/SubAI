@@ -202,7 +202,7 @@ Rules:
         obstructionSeverity: parsed.obstructionSeverity || "substantial",
         suggestedDescription: parsed.suggestedDescription || "",
         recommendedAction: parsed.recommendedAction || "verified",
-        confidenceNotes: "Gemini 3.6 Flash",
+        confidenceNotes: "SubAI Vision",
         isUnclear: Boolean(parsed.isUnclear),
       };
     } catch (modelErr: any) {
