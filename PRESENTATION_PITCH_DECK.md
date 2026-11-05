@@ -187,8 +187,9 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 
 | Name | Role & Core Responsibilities | GitHub |
 | :--- | :--- | :---: |
-| **Danlord Farell Soriano** | **Team Leader & Product Manager**<br />Pitch Lead, Municipal Stakeholder Framing, Agile Sprint Management, Architecture Coordination | [@Daffy-Ducky](https://github.com/Daffy-Ducky) |
-| **Justine Roy P. Salvador** | **Lead Software Engineer**<br />Full-Stack Architecture, Next.js 16, Firebase, Leaflet GIS, Google Gemini 3.6 Flash Integration | [@JRSstuff](https://github.com/JRSstuff) |
-| **John Kurt Montero** | **UI/UX Designer**<br />Mobile PWA Ergonomics, Interface Flow, Tailwind Design Tokens | — |
-| **Shawn Michael Hitalada** | **Research Lead**<br />Data Synthesis, CEIW Mass-Balance Formulations, CLENRO & CDRRMD Analytics | — |
-| **Isaiah Marc Postrero** | **Faculty Coach**<br />Academic Mentorship & Guidance, USTP Cagayan de Oro | — |
+| **Danlord Farell Soriano** | **Team Leader & Pitch Lead**<br />Project Management, Pitch Delivery, Stakeholder Q&A, Team Coordination | [@Daffy-Ducky](https://github.com/Daffy-Ducky) |
+| **Justine Roy P. Salvador** | **Lead Developer (Backend & Full-Stack)**<br />Next.js 16 App Router, Firebase/Firestore, Leaflet GIS, Google Gemini 3.6 Flash Integration | [@JRSstuff](https://github.com/JRSstuff) |
+| **John Kurt Montero** | **UI/UX Designer**<br />Mobile PWA Interface Flow, Ergonomics, Tailwind Design Tokens | — |
+| **Mark Anthony Bacus** | **Presentation & Slide Deck Lead**<br />Pitch Deck Slide Design, Visual Storytelling, Presentation Assets | — |
+| **Shawn Michael Hitalada** | **Concept Paper & Research Lead**<br />Concept Paper Synthesis, CEIW Mass-Balance Formulations, CLENRO/CDRRMD Analytics | — |
+| **Isaiah Marc Postrero** | **Faculty Coach & Mentor**<br />Academic Mentorship & Guidance, USTP Cagayan de Oro | — |
