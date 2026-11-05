@@ -175,21 +175,17 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 
 - **Screen Callouts**: Role-based permissions matrix, secure credentials, municipal audit trail.
 
-
 ---
 
 ## Slide 13: Team Pew Pew & Project Leadership
 
-<p align="center">
-  <strong>1st Year BS Computer Science — University of Science and Technology of Southern Philippines (USTP - CDO)</strong><br />
-  <em>Green Innovation Pitching Competition | City Education Innovation Week (CEIW) 2026</em>
-</p>
+Developed by **Team Pew Pew** (1st Year BS Computer Science, University of Science and Technology of Southern Philippines — USTP CDO Campus) for the **CEIW 2026** Green Innovation Pitching Competition:
 
 | Name | Role & Core Responsibilities | GitHub |
 | :--- | :--- | :---: |
-| **Danlord Farell Soriano** | **Team Leader & Pitch Lead**<br />Project Management, Pitch Delivery, Stakeholder Q&A, Team Coordination | [@Daffy-Ducky](https://github.com/Daffy-Ducky) |
-| **Justine Roy P. Salvador** | **Lead Developer (Backend & Full-Stack)**<br />Next.js 16 App Router, Firebase/Firestore, Leaflet GIS, Google Gemini 3.6 Flash Integration | [@JRSstuff](https://github.com/JRSstuff) |
-| **John Kurt Montero** | **UI/UX Designer**<br />Mobile PWA Interface Flow, Ergonomics, Tailwind Design Tokens | — |
-| **Mark Anthony Bacus** | **Presentation & Slide Deck Lead**<br />Pitch Deck Slide Design, Visual Storytelling, Presentation Assets | — |
-| **Shawn Michael Hitalada** | **Concept Paper & Research Lead**<br />Concept Paper Synthesis, CEIW Mass-Balance Formulations, CLENRO/CDRRMD Analytics | — |
-| **Isaiah Marc Postrero** | **Faculty Coach & Mentor**<br />Academic Mentorship & Guidance, USTP Cagayan de Oro | — |
+| **Danlord Farell Soriano** | **Team Leader, Pitch Lead & Concept Paper Author**<br />Authored the official Concept Paper, conducted municipal research & stakeholder consultations with CLENRO, spearheaded faculty mentorship with Sir Isaiah, pitch delivery & team management | [@Daffy-Ducky](https://github.com/Daffy-Ducky) |
+| **Justine Roy P. Salvador** | **Lead Full-Stack & Backend Engineer**<br />Next.js 16 App Router, Firebase/Firestore, Leaflet GIS, Google Gemini 3.6 Flash Vision AI, technical QA guidance | [@JRSstuff](https://github.com/JRSstuff) |
+| **John Kurt Montero** | **UI/UX Designer & Media Production**<br />Mobile PWA interface ergonomics & design tokens, application QA testing, Video Pitch Deck editing | — |
+| **Mark Anthony Bacus** | **Pitch Deck Design & Visual Storytelling**<br />16:9 widescreen presentation deck design, visual iconography, slide layout architecture | — |
+| **Shawn Michael Hitalada** | **QA Testing & Presentation Associate**<br />Application QA testing & defect verification, slide deck content synthesis and collaboration with Mark | — |
+| **Isaiah Marc Postrero** | **Faculty Coach & Mentor**<br />Academic mentorship, research alignment, and presentation critique, USTP Cagayan de Oro | — |
