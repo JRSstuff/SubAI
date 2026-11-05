@@ -12,7 +12,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 1: Home Landing & Problem Introduction
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/01_landing_home.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/01_landing_home.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/01_landing_home.png) | ![Mobile](./public/presentation_screenshots/mobile/01_landing_home.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "Urban flooding across Cagayan de Oro is severely exacerbated by clogged drainage canals, silted culverts, and unmanaged plastic waste. SubAI connects citizens, city maintenance crews, and local recyclers into an auditable closed loop that recovers materials and prevents urban flash floods."
@@ -24,7 +24,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 2: Step 1 – Citizen Obstruction Reporting with Gemini Vision
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/02_report_citizen.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/02_report_citizen.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/02_report_citizen.png) | ![Mobile](./public/presentation_screenshots/mobile/02_report_citizen.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "Citizens report obstructions in under 15 seconds. Taking a photo triggers Google Gemini 3.6 Flash multimodal vision, classifying the culvert type and auto-detecting debris batches (PET bottles, flexible plastic, silt, organic waste). A single tap on **'Select Current Location'** locks exact GPS coordinates instantly without requiring manual map navigation."
@@ -36,7 +36,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 3: Geospatial Drainage Intelligence & Hotspots
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/03_gis_map.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/03_gis_map.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/03_gis_map.png) | ![Mobile](./public/presentation_screenshots/mobile/03_gis_map.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "The interactive GIS map gives municipal engineers a real-time thermal view of drainage obstruction clusters throughout Cagayan de Oro (Lapasan, Carmen, Cogon, USTP, Macasandig). Color-coded severity pins pinpoint critical choke points before heavy rains trigger flash flooding."
@@ -48,7 +48,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 4: Operations & Mass Balance Recovery Dashboard
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/04_operations_dashboard.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/04_operations_dashboard.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/04_operations_dashboard.png) | ![Mobile](./public/presentation_screenshots/mobile/04_operations_dashboard.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "Unlike typical civic apps, SubAI enforces a **strict mathematical mass balance ledger**. Every kilogram of PET, flexible packaging, silt, and residual waste removed from ditches is tracked through recovery. Verified weights are separated from qualitative clearances to maintain 100% scientific integrity."
@@ -60,7 +60,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 5A: Step 2 – Reviewer Triage Queue (Submitted Tab)
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/05_review_queue_submitted.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/05_review_queue_submitted.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/05_review_queue_submitted.png) | ![Mobile](./public/presentation_screenshots/mobile/05_review_queue_submitted.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "Incoming citizen reports populate the **Submitted** tab in real-time. Reviewers can inspect photo evidence, view AI-suggested categories, and open the triage modal to verify, request inspection, or link duplicate reports."
@@ -72,7 +72,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 5B: Step 3 – Reviewer Dispatched Queue (Verified Tab)
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/05b_review_queue_verified.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/05b_review_queue_verified.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/05b_review_queue_verified.png) | ![Mobile](./public/presentation_screenshots/mobile/05b_review_queue_verified.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "Once verified, reports move seamlessly to the **Verified** tab with assigned municipal teams and calculated priority scores (Score 5/5 High, Score 3/5 Med), demonstrating disciplined dispatch operations."
@@ -84,7 +84,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 6: Step 2 & 3 – Priority Matrix & Duplicate Linking Modal
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/06_review_triage_modal.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/06_review_triage_modal.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/06_review_triage_modal.png) | ![Mobile](./public/presentation_screenshots/mobile/06_review_triage_modal.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "Priority is calculated dynamically using the CEIW Matrix: Obstruction Level (0–3) + Hazard Disruption (0–2). If multiple citizens report the same culvert, the reviewer selects **Duplicate** and links it to the original report, preventing redundant dispatches while preserving audit logs."
@@ -96,7 +96,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 7: Step 6 – Reviewer Recipient Handover Confirmation
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/07_review_handovers_step6.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/07_review_handovers_step6.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/07_review_handovers_step6.png) | ![Mobile](./public/presentation_screenshots/mobile/07_review_handovers_step6.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "Step 6 is where accountability is enforced. When collectors deliver plastics to partner recyclers (e.g. CDO MRF Lapasan, Green Loop), reviewers inspect the digital weigh ticket. If the delivery is partial, the **remaining balance in custody is visibly preserved** until fully dispositioned."
@@ -108,7 +108,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 8A: Step 4 – Field Collector Task Board (Active Tasks)
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/08_collector_tasks_active.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/08_collector_tasks_active.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/08_collector_tasks_active.png) | ![Mobile](./public/presentation_screenshots/mobile/08_collector_tasks_active.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "Field crews receive prioritized assignments on mobile with GPS coordinates, target completion dates, and obstruction photos. They can immediately log work via **Weigh & Evidence** or initiate a **Hand Over to Recycler**."
@@ -120,7 +120,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 8B: Step 4 – Field Collector Task Board (Completed Tasks)
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/08b_collector_tasks_completed.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/08b_collector_tasks_completed.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/08b_collector_tasks_completed.png) | ![Mobile](./public/presentation_screenshots/mobile/08b_collector_tasks_completed.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "The **Completed** tab displays verified culvert clearances with exact category weights (PET, Flexible, Silt) and before/after evidence photos. Crews can tap **Hand Over** directly from completed cards."
@@ -132,7 +132,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 9: Step 4 – Field Weighing & Qualitative Clearance
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/09_collector_weigh_modal.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/09_collector_weigh_modal.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/09_collector_weigh_modal.png) | ![Mobile](./public/presentation_screenshots/mobile/09_collector_weigh_modal.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "Once cleared, crews capture an 'After-Cleanup' verification photo and log material weights (PET, flexible packaging, silt, trash). If a scale is not available on-site, they toggle **'Scale Measurement Unavailable'**, allowing honest qualitative clearance without corrupting numeric mass data."
@@ -144,7 +144,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 10: Step 5 – Recipient Handover & Custody Tracking
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/10_collector_handover_modal.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/10_collector_handover_modal.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/10_collector_handover_modal.png) | ![Mobile](./public/presentation_screenshots/mobile/10_collector_handover_modal.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "When plastics are transferred to the recycler, the collector opens the Handover modal. They enter the recycler's accepted weight and photograph the scale receipt. If 28.5 kg was submitted and 22.0 kg was accepted, the system immediately flags the **6.5 kg remaining balance in collector custody**, ensuring zero materials are lost in transit."
@@ -156,7 +156,7 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 11: Rain Bank & Stormwater Harvesting
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/11_rain_bank.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/11_rain_bank.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/11_rain_bank.png) | ![Mobile](./public/presentation_screenshots/mobile/11_rain_bank.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "Beyond waste recovery, SubAI integrates campus rainwater harvesting to mitigate flash flooding. Stormwater is diverted into retention cisterns for non-potable campus use, reducing peak canal discharge during monsoon downpours."
@@ -168,9 +168,27 @@ A complete showcase of **SubAI** (CEIW Urban Drainage & Circular Economy Recover
 ## Slide 12: Admin & Role-Based Access Control
 | Desktop View | Mobile View |
 | :---: | :---: |
-| ![Desktop](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/desktop/12_admin_roles.png) | ![Mobile](/C:/Users/BeboyPC/.gemini/antigravity/brain/7fd7c8c5-66d2-4866-b1a3-baad6f2c4e71/mobile/12_admin_roles.png) |
+| ![Desktop](./public/presentation_screenshots/desktop/12_admin_roles.png) | ![Mobile](./public/presentation_screenshots/mobile/12_admin_roles.png) |
 
 ### 🎙️ Speaker Talking Points:
 > "Enterprise-grade governance is built into the core. Administrators can manage municipal staff roles—Admins, Reviewers, Field Collectors, and Citizen Reporters—ensuring that triage decisions and ledger closures are strictly authorized."
 
 - **Screen Callouts**: Role-based permissions matrix, secure credentials, municipal audit trail.
+
+
+---
+
+## Slide 13: Team Pew Pew & Project Leadership
+
+<p align="center">
+  <strong>1st Year BS Computer Science — University of Science and Technology of Southern Philippines (USTP - CDO)</strong><br />
+  <em>Green Innovation Pitching Competition | City Education Innovation Week (CEIW) 2026</em>
+</p>
+
+| Name | Role & Core Responsibilities | GitHub |
+| :--- | :--- | :---: |
+| **Danlord Farell Soriano** | **Team Leader & Product Manager**<br />Pitch Lead, Municipal Stakeholder Framing, Agile Sprint Management, Architecture Coordination | [@Daffy-Ducky](https://github.com/Daffy-Ducky) |
+| **Justine Roy P. Salvador** | **Lead Software Engineer**<br />Full-Stack Architecture, Next.js 16, Firebase, Leaflet GIS, Google Gemini 3.6 Flash Integration | [@JRSstuff](https://github.com/JRSstuff) |
+| **John Kurt Montero** | **UI/UX Designer**<br />Mobile PWA Ergonomics, Interface Flow, Tailwind Design Tokens | — |
+| **Shawn Michael Hitalada** | **Research Lead**<br />Data Synthesis, CEIW Mass-Balance Formulations, CLENRO & CDRRMD Analytics | — |
+| **Isaiah Marc Postrero** | **Faculty Coach**<br />Academic Mentorship & Guidance, USTP Cagayan de Oro | — |
