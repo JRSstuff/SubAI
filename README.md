@@ -205,6 +205,20 @@ All high-resolution 2× Retina presentation slides and speaker talking points ar
 
 ---
 
+## 👥 Core Team & Project Leadership (Team Pew Pew)
+
+Developed by **Team Pew Pew** (1st Year BS Computer Science, University of Science and Technology of Southern Philippines — USTP CDO Campus) for the **CEIW 2026** Green Innovation Pitching Competition:
+
+| Name | Role & Contribution | GitHub |
+| :--- | :--- | :---: |
+| **Danlord Farell Soriano** | **Team Leader & Product Manager**<br />Pitch Lead, Municipal Stakeholder Framing, Agile Sprint Management, System Coordination | [@Daffy-Ducky](https://github.com/Daffy-Ducky) |
+| **Justine Roy P. Salvador** | **Lead Full-Stack Engineer**<br />Next.js 16 App Router, Firebase Realtime Database, Leaflet GIS, Google Gemini 3.6 Flash Integration | [@JRSstuff](https://github.com/JRSstuff) |
+| **John Kurt Montero** | **UI/UX Designer**<br />Mobile PWA Ergonomics, Interface Flow, Tailwind Design Tokens | — |
+| **Shawn Michael Hitalada** | **Research Lead**<br />Data Synthesis, CEIW Mass-Balance Formulations, CLENRO & CDRRMD Analytics | — |
+| **Isaiah Marc Postrero** | **Faculty Coach & Mentor**<br />Academic Mentorship & Guidance, USTP Cagayan de Oro | — |
+
+---
+
 ## 📄 License
 
 Developed for the **CEIW 2026** urban drainage and circular economy pilot in Cagayan de Oro City. All rights reserved.
