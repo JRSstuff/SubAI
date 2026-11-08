@@ -1,0 +1,23 @@
+1
+00:00:00,000 --> 00:00:10,000
+Urban waterways clog within hours during heavy rain. SubAI transforms flood prevention into a closed-loop, data-driven cleanup ecosystem.
+
+2
+00:00:10,000 --> 00:00:20,000
+Citizens snap photo evidence of blocked drainage. Precise GPS pinning and real-time photo capture initiate an instant verified alert.
+
+3
+00:00:20,000 --> 00:00:30,000
+Powered by Gemini 3.5 Vision, the AI scans the image in milliseconds—classifying culverts, detecting PET bottles, and scoring blockage severity.
+
+4
+00:00:30,000 --> 00:00:40,000
+Operators monitor live drainage hotspots on the GIS map, validating AI triage and instantly dispatching cleanup crews to critical bottlenecks.
+
+5
+00:00:40,000 --> 00:00:50,000
+Collectors clear the obstruction, log verified weights by material category on their mobile task board, and upload post-cleanup clearance proof.
+
+6
+00:00:50,000 --> 00:01:00,000
+Recovered plastics are handed to certified recyclers under a strict mass balance ledger—preventing floods and closing the loop on urban waste.
