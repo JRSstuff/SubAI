@@ -12,9 +12,10 @@ export interface AIScanResult {
 }
 
 const CANDIDATE_MODELS = [
-  "gemini-3.6-flash",
-  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite", // 500 RPD (Requests Per Day) & 250K TPM in Google AI Studio
   "gemini-3.1-flash-lite",
+  "gemini-3.5-flash",
+  "gemini-3.6-flash",
 ];
 
 export const VALID_DRAINAGE_CLASSIFICATIONS = [
