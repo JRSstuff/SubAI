@@ -388,39 +388,6 @@ export function AuthCard() {
               </p>
             </div>
 
-            {/* 1-Tap Quick Pilot Login */}
-            <div className="flex flex-col gap-2 pb-1 bg-[#F8FAFC] p-3 rounded-2xl border border-[#E2E8F0] text-center">
-              <div className="flex items-center justify-center gap-1.5 text-center">
-                <Sparkles className="w-3.5 h-3.5 text-[#30AFFF]" />
-                <span className="text-[11px] font-extrabold text-[#0F172A] uppercase tracking-wider">
-                  1-Tap Quick Pilot Login
-                </span>
-                <span className="text-[10px] text-[#64748B] lowercase font-medium bg-white px-2 py-0.5 rounded-full border border-[#E2E8F0]">
-                  instant test
-                </span>
-              </div>
-
-              <div className="flex flex-wrap justify-center gap-1.5">
-                {DEMO_ACCOUNTS.map((acc) => (
-                  <button
-                    key={acc.role}
-                    type="button"
-                    tabIndex={mode === "login" ? 0 : -1}
-                    onClick={() => handleQuickLogin(acc.email)}
-                    disabled={isLoading || redirecting}
-                    className="flex-1 min-w-[90px] py-1.5 px-2 bg-white hover:bg-[#92EEFF]/30 active:bg-[#92EEFF] border border-[#CBD5E1] hover:border-[#30AFFF] rounded-xl text-xs font-bold text-[#0F172A] transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 shadow-2xs min-h-[42px] text-center"
-                  >
-                    <span className="text-[#30AFFF] font-extrabold text-center block w-full text-[11px]">
-                      {acc.label}
-                    </span>
-                    <span className="text-[9px] text-[#64748B] font-medium truncate w-full text-center block">
-                      {acc.target}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Login Inputs */}
             <div className="flex flex-col gap-2.5">
               <div className="relative flex items-center">
@@ -721,38 +688,6 @@ export function AuthCard() {
 
         {/* Mobile Body */}
         <div className="p-5 sm:p-7 flex flex-col gap-3.5">
-          {/* Quick Pilot 1-Tap Entry (Login mode) */}
-          {mode === "login" && (
-            <div className="flex flex-col gap-2.5 pb-2 bg-[#F8FAFC] p-3.5 rounded-2xl border border-[#E2E8F0] text-center">
-              <div className="flex items-center justify-center gap-1.5 text-center">
-                <Sparkles className="w-3.5 h-3.5 text-[#30AFFF]" />
-                <span className="text-[11px] font-extrabold text-[#0F172A] uppercase tracking-wider">
-                  1-Tap Quick Pilot Login
-                </span>
-                <span className="text-[10px] text-[#64748B] lowercase font-medium bg-white px-2 py-0.5 rounded-full border border-[#E2E8F0]">
-                  instant test
-                </span>
-              </div>
-
-              <div className="flex flex-wrap justify-center gap-2">
-                {DEMO_ACCOUNTS.map((acc) => (
-                  <button
-                    key={acc.role}
-                    type="button"
-                    onClick={() => handleQuickLogin(acc.email)}
-                    disabled={isLoading || redirecting}
-                    className="flex-1 min-w-[95px] max-w-[130px] py-2 px-2 bg-white hover:bg-[#92EEFF]/30 active:bg-[#92EEFF] border border-[#CBD5E1] hover:border-[#30AFFF] rounded-xl text-xs font-bold text-[#0F172A] transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 shadow-2xs min-h-[46px] text-center"
-                  >
-                    <span className="text-[#30AFFF] font-extrabold text-center block w-full">{acc.label}</span>
-                    <span className="text-[9px] text-[#64748B] font-medium truncate w-full text-center block">
-                      {acc.target}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Role Selection (Register mode) */}
           {mode === "register" && (
             <div className="flex flex-col gap-2 text-center">
